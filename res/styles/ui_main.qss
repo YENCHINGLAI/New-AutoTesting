@@ -1,0 +1,175 @@
+/* 全局樣式 */
+QWidget {
+    font-family: "Microsoft YaHei", "Segoe UI", Arial;
+    font-size: 16px;
+}
+
+/* 主窗口 */
+QMainWindow {
+    background-color: #f5f5f5;
+}
+
+/* 按鈕樣式 */
+QPushButton {
+    background-color: #008AAB;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    min-width: 80px;
+    font-weight: bold;
+    font-size: 24px;
+}
+
+QPushButton:hover {
+    background-color: #009bc1;
+}
+
+QPushButton:pressed {
+    background-color: #007795;
+}
+
+QPushButton:disabled {
+    background-color: #cccccc;
+    color: #666666;
+}
+
+/* QSS 樣式 */
+QPushButton[type="primary"] {
+    font-size: 16px;
+}
+
+QPushButton[type="secondary"] {
+    font-size: 54px;
+}
+
+/* 列表部件 */
+QListWidget {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+QListWidget::item {
+    padding: 8px;
+    border-radius: 2px;
+}
+
+QListWidget::item:selected {
+    background-color: #008AAB;
+    color: white;
+}
+
+QListWidget::item:hover {
+    background-color: #e8f6f9;
+}
+
+/* 進度條 */
+QProgressBar {
+    border: none;
+    background-color: #e0e0e0;
+    border-radius: 3px;
+    text-align: center;
+    color: #333333;
+}
+
+QProgressBar::chunk {
+    background-color: #008AAB;
+    border-radius: 3px;
+}
+
+/* GroupBox 樣式 */
+QGroupBox {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin-top: 12px;
+    padding-top: 8px;
+    background-color: white;
+}
+
+QGroupBox::title {
+    color: #008AAB;
+    margin-top: -12px;
+    margin-left: 8px;
+    padding: 0 5px;
+    background-color: white;
+    font-weight: bold;
+}
+
+/* 標籤樣式 */
+QLabel {
+    color: #333333;
+}
+
+/* MenuBar 樣式 */
+QMenuBar {
+    background-color: white;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+QMenuBar::item {
+    padding: 8px 12px;
+    background-color: transparent;
+}
+
+QMenuBar::item:selected {
+    background-color: #008AAB;
+    color: white;
+}
+
+/* Menu 樣式 */
+QMenu {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    padding: 4px;
+}
+
+QMenu::item {
+    padding: 8px 24px;
+    border-radius: 2px;
+}
+
+QMenu::item:selected {
+    background-color: #008AAB;
+    color: white;
+}
+
+/* StatusBar 樣式 */
+QStatusBar {
+    background-color: white;
+    color: #333333;
+}
+
+/* 特殊標籤樣式（用於顯示重要信息） */
+QLabel#Lb_DUT {
+    font-size: 34px;
+    font-weight: bold;
+    color: #004d99;
+}
+
+/* 小標頭 */
+QLabel[type="sTitle"]
+{
+    color: #008AAB;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* 測試計數器 */
+QLabel[objectName="Lb_CountPass"],
+QLabel[objectName="Lb_CountFail"] 
+{
+    background-color: #f8f8f8;
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    padding: 2px 4px;
+}
+
+QLineEdit#Tb_CountFail {
+    color: #ff0000;
+}
+
+QLineEdit#Tb_CountPass {
+    color: #228505;
+}

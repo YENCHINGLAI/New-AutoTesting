@@ -1,0 +1,47 @@
+Script:
+  Version: V1.00
+  Release note: First version
+  
+Product:
+  Model Name: N2612-SA
+  Mac Count: 2
+  Serial Count: 2
+  Version: V1.66
+  Mode: Paring
+  Other Message: AMX
+  
+Items:
+- Title: Audio Balance L Level
+  Retry Message: Error! Verify DUT is Power ON and Connected
+  Valid range: 5,7
+  Unit: V
+  Delay: 10
+  Execute: balance.exe 0 A1.0
+  
+- Title: Audio Balance L Frequency
+  Retry Message: Error! Verify DUT is Power ON and Connected
+  Valid range: 950,1050
+  Unit: Hz
+  Delay: 10
+  Execute: balance.exe 1 A1.0
+
+- Title: Audio Balance R Level
+  Retry Message: Error! Verify DUT is Power ON and Connected
+  Valid range: 5,7
+  Unit: V
+  Delay: 10
+  Execute: balance.exe 0 A1.0
+  
+- Title: Audio Balance R Frequency
+  Retry Message: Error! Verify DUT is Power ON and Connected
+  Valid range: 950,1050
+  Unit: Hz
+  Delay: 10
+  Execute: balance.exe 1 A1.0
+  
+- Title: CPHD-V4 Status confirm
+  Retry Message: ''
+  Valid range: 1,1
+  Unit: N/A
+  Delay: 2
+  Execute: serial COM1,115200 "$tmds_sw?" "$tmds_sw? on" 0 2

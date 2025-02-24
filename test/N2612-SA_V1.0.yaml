@@ -1,0 +1,25 @@
+Script Info:
+  Version: V1.00
+  Release: First version
+DUT Info:
+  Model Name: N2612-SA
+  Mac 數量: 2
+  Serial Number: '1'
+  Version: V1.66
+  Mode: Pairing
+  Other Message: AMX
+Item:
+- Title Message: Audio Balance 1 Level
+  Retry Message: Error! Verify DUT is Power ON and Connected
+  Value Max: '0.75'
+  Value Min: '0.90'
+  Unit: mV
+  Delay: 10
+  Execute: audio_cli.exe --mode 0 --channel 0
+- Title Message: Audio Balance 1 Frequency
+  Retry Message: Error! Verify DUT is Power ON and Connected
+  Value Max: '990'
+  Value Min: '1100'
+  Unit: Hz
+  Delay: 10
+  Execute: audio_cli.exe --mode 1 --channel 0
