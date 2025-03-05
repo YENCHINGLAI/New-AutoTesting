@@ -258,7 +258,7 @@ class MainWindow(QMainWindow):
             self.script_data = dialog.get_script_data()
             yaml_str = yaml.dump(self.script_data, allow_unicode=True, sort_keys=False)
             self.script_text.setPlainText(yaml_str)
-            self.update_item_table()
+            self.update_items_table()
 
     def load_script(self):
         file_name, _ = QFileDialog.getOpenFileName(self, "Open YAML File", "", "YAML Files (*.yaml *.yml)")
@@ -271,7 +271,7 @@ class MainWindow(QMainWindow):
                 #     self.script_data = dialog.get_script_data()
                     yaml_str = yaml.dump(self.script_data, allow_unicode=True, sort_keys=False)
                     self.script_text.setPlainText(yaml_str)
-                    self.update_item_table()
+                    self.update_items_table()
             except Exception as e:
                 QMessageBox.critical(self, "錯誤", f"無法載入腳本: {str(e)}")
 
@@ -287,9 +287,9 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 QMessageBox.critical(self, "錯誤", f"無法保存腳本: {str(e)}")
 
-    def update_item_table(self):
+    def update_items_table(self):
         self.item_table.setRowCount(0)
-        if self.script_data and "Items" in self.script_data:
+        if self.script_data and "Item" in self.script_data:
             self.item_table.setRowCount(len(self.script_data["Items"]))
             for index, item in enumerate(self.script_data["Items"]):
                 #self.item_table.setItem(index, 0, QTableWidgetItem(str(index + 1)))
@@ -298,18 +298,39 @@ class MainWindow(QMainWindow):
                 self.item_table.setItem(index, 2, QTableWidgetItem(""))  # 實際值初始為空
 
     # def execute_all_items(self):
-    #     if not self.script_data or "Item" not in self.script_data:
-    #         return
+    #     if self.script_data and "Item" in self.script_data:
+    #         for index, item in enumerate(self.script_data["Item"]):
+    #             execute_command = item.get("Execute", "")
+    #             value_range = item.get("Value range", "")
+                
+    #             try:
+    #                 result = subprocess.check_output(execute_command, shell=True, text=True).strip()
+    #                 self.item_table.setItem(index, 3, QTableWidgetItem(result))
+                    
+    #                 if self.check_value_range(result, value_range):
+    #                     for col in range(4):
+    #                         self.item_table.item(index, col).setBackground(QColor(144, 238, 144))  # Light green color
+    #                 else:
+    #                     for col in range(4):
+    #                         self.item_table.item(index, col).setBackground(QColor(255, 255, 255))  # White color
+    #             except subprocess.CalledProcessError:
+    #                 self.item_table.setItem(index, 3, QTableWidgetItem("執行錯誤"))
+    #                 for col in range(4):
+    #                     self.item_table.item(index, col).setBackground(QColor(255, 200, 200))  # Light red color
 
-    #     self.progress_bar.setMaximum(len(self.script_data["Item"]))
-    #     self.progress_bar.setValue(0)
+    def execute_all_items(self):
+        if not self.script_data or "Item" not in self.script_data:
+            return
 
-    #     for index, item in enumerate(self.script_data["Item"]):
-    #         execute_command = item.get("Execute", "")
-    #         worker = CommandWorker(index, execute_command)
-    #         worker.signals.finished.connect(self.handle_result)
-    #         worker.signals.error.connect(self.handle_error)
-    #         self.threadpool.start(worker)
+        self.progress_bar.setMaximum(len(self.script_data["Item"]))
+        self.progress_bar.setValue(0)
+
+        for index, item in enumerate(self.script_data["Item"]):
+            execute_command = item.get("Execute", "")
+            worker = CommandWorker(index, execute_command)
+            worker.signals.finished.connect(self.handle_result)
+            worker.signals.error.connect(self.handle_error)
+            self.threadpool.start(worker)
 
     def start_execution(self):
         if not self.script_data or "Item" not in self.script_data:

@@ -20,8 +20,9 @@ class Setting:
             return "logs"
         else:
             return os.path.join(Setting.GetConfigPath(), "logs")
-        
-class Result_Table(enum.Enum):
+
+@enum.unique        
+class TABLE_ENUM(enum.Enum):
     TITLE = 0
     UNIT = 1
     MIN_VALID = 2

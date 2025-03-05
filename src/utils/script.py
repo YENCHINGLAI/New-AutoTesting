@@ -29,7 +29,7 @@ class Script:
         self.version: str = ""                   #版本號
         self.release_note: str = ""              #進版備註
         self.product: Product = Product()
-        self.items: List[ScriptItems] = []
+        self.items: List[ScriptItems] = []       
 
 class ScriptValidationError(Exception):
     """自訂腳本驗證錯誤異常"""
@@ -38,10 +38,6 @@ class ScriptValidationError(Exception):
 class ScriptManager:
     def __init__(self):
         self.script = Script()
-           
-    def valid_split(self, valid_range):
-        min_val, max_val = map(int, valid_range.split(','))
-        return min_val, max_val
 
     def load_script(self, filename: str) -> Optional[Script]:
         if not os.path.exists(filename):
@@ -49,6 +45,8 @@ class ScriptManager:
             return None
         
         try:
+            self.script.file_name = filename
+            
             with open(filename, 'r', encoding='utf-8') as file:
                 script_data: Dict[str, Any] = yaml.safe_load(file)
 
@@ -93,15 +91,14 @@ class ScriptManager:
                 script.items.append(ScriptItems(
                     title = str(item_data.get("Title", "")),
                     retry_message = str(item_data.get("Retry Message", "")),
-                    valid_min = min_val,
-                    valid_max = max_val,
+                    valid_min = int(min_val),
+                    valid_max = int(max_val),
                     unit = str(item_data.get("Unit", "")),
                     delay = float(item_data.get("Delay", 0)),
                     execute = str(item_data.get("Execute", ""))
                 ))
-            
             self.script = script
-            return script               
+            return script
         
         except FileNotFoundError:
             Log.error(f"Script file not found: {filename}")
@@ -115,6 +112,10 @@ class ScriptManager:
         except Exception as e:
             Log.error(f"Error loading script: {e}")
             return None
+               
+    def valid_split(self, valid_range):
+        min_val, max_val = map(int, valid_range.split(','))
+        return min_val, max_val
     
     def save_script(self, filename):
         pass

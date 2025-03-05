@@ -1,6 +1,6 @@
 # 專案架構
 # New_AutoTesting/
-#   |-- __main__.py                     #專案主程式
+#   |-- __main__.py                     #專案主程式進入點
 #   |-- src/                            #程式碼
 #   |    |-- controllers/               #主程式
 #   |    |    |-- main_controller.py

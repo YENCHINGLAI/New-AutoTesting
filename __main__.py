@@ -26,6 +26,11 @@ from src.utils.log import Log
 #===================================================================================================
 # Code
 #===================================================================================================
+# 切換到程式所在目錄
+abs_pth = os.path.abspath(sys.argv[0])
+working_dir = os.path.dirname(abs_pth)
+os.chdir(working_dir)
+
 def main():
     app = QApplication(sys.argv)
     window = MainWindow()

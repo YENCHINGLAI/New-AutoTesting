@@ -166,7 +166,7 @@ class Ui_MainWindow(object):
         self.PBar_CurrentItem = QProgressBar(self.GBox_PROGRESS)
         self.PBar_CurrentItem.setObjectName(u"PBar_CurrentItem")
         self.PBar_CurrentItem.setGeometry(QRect(10, 100, 311, 31))
-        self.PBar_CurrentItem.setValue(0)
+        self.PBar_CurrentItem.setValue(24)
         self.label_5 = QLabel(self.GBox_PROGRESS)
         self.label_5.setObjectName(u"label_5")
         self.label_5.setGeometry(QRect(10, 30, 51, 31))
