@@ -2,8 +2,7 @@
 # Splash screen
 #===================================================================================================
 # Loading screen excemple
-import time, tempfile, os
-#time.sleep(10)
+import tempfile, os
 
 # 檢查是否在 Nuitka 打包的環境中
 if "NUITKA_ONEFILE_PARENT" in os.environ:
@@ -23,14 +22,14 @@ import sys
 from PySide6.QtWidgets import QApplication
 from src.controllers.main_controller import MainWindow
 from src.utils.log import Log
-#===================================================================================================
-# Code
-#===================================================================================================
+
 # 切換到程式所在目錄
 abs_pth = os.path.abspath(sys.argv[0])
 working_dir = os.path.dirname(abs_pth)
 os.chdir(working_dir)
-
+#===================================================================================================
+# Code
+#===================================================================================================
 def main():
     app = QApplication(sys.argv)
     window = MainWindow()

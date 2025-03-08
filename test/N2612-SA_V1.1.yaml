@@ -6,84 +6,93 @@ Product:
   Model Name: N2612-SA
   Mac Count: 2
   Serial Count: 2
-  Version: V1.66
+  Version: V1.88
   Mode: Paring
   Other Message: AMX
   
 Items:   
-- Title: Audio Balance L RMS DIFF
-  Retry Message: Error! Verify DUT is Power ON and Connected
-  Valid range: 1530,1870
-  Unit: mV
-  Delay: 10
-  Execute: balance_api 0 0
-  
-- Title: Audio Balance L Frequency
-  Retry Message: Error! Verify DUT is Power ON and Connected
-  Valid range: 950,1050
-  Unit: Hz
-  Delay: 10
-  Execute: balance_api 2 0
+# 測試項目顯示名稱
+# 發生錯誤時顯示的訊息
+# 驗證值的範圍
+# 量測單位
+# 進入下一個測試項目的Delay
+# 要執行的API寫法
+# - Title: Ethernet H26X firmware check
+  # Retry Message: ''
+  # Valid range: 1,1
+  # Unit: N/A
+  # Delay: 2
+  # Execute: Telnet 192.168.100.191 50002 "?" "H26X_FW_VERSION:1.96" 3 5 --match_mode contains
 
-- Title: Audio Balance R RMS DIFF
-  Retry Message: Error! Verify DUT is Power ON and Connected
-  Valid range: 1530,1870
-  Unit: mV
-  Delay: 10
-  Execute: balance_api 0 1
-  
-- Title: Audio Balance R Frequency
-  Retry Message: Error! Verify DUT is Power ON and Connected
-  Valid range: 950,1050
-  Unit: Hz
-  Delay: 10
-  Execute: balance_api 2 1
-  
+#################### CPHD-V4 Init setting ###################
 - Title: V4 set pattern mode
   Retry Message: ''
   Valid range: 1,1
   Unit: N/A
-  Delay: 2
-  Execute: serial COM13,115200 "$task_mode pattern" "$task_mode pattern" 0 2
+  Delay: 1
+  Execute: serial_api COM13,115200 "$task_mode pattern" "$task_mode pattern" 2 2
   
 - Title: V4 set timing to 4096x2160p60
   Retry Message: ''
   Valid range: 1,1
   Unit: N/A
-  Delay: 2
-  Execute: serial COM13,115200 "$timing 90" "$timing 90" 0 2
+  Delay: 1
+  Execute: serial_api COM13,115200 "$timing 90" "$timing 90" 2 2
   
 - Title: V4 set hdcp on
   Retry Message: ''
   Valid range: 1,1
   Unit: N/A
-  Delay: 2
-  Execute: serial COM13,115200 "$hdcp_out_sw on" "$hdcp_out_sw on" 0 2
+  Delay: 1
+  Execute: serial_api COM13,115200 "$hdcp_out_sw on" "$hdcp_out_sw on" 2 2
   
 - Title: V4 set hdcp v2.2
   Retry Message: ''
   Valid range: 1,1
   Unit: N/A
-  Delay: 2
-  Execute: serial COM13,115200 "$hdcp_out_ver v2.2" "$hdcp_out_ver v2.2" 0 2
+  Delay: 5
+  Execute: serial_api COM13,115200 "$hdcp_out_ver v2.2" "$hdcp_out_ver v2.2" 2 2
   
-- Title: V4 set hdcp v2.2
-  Retry Message: ''
-  Valid range: 1,1
-  Unit: N/A
+#################### Audio test ###################
+- Title: Balance out Left RMS Amplitude
+  Retry Message: Error! Verify DUT is Power ON and Connected
+  Valid range: 1530,1870
+  Unit: mV
   Delay: 2
-  Execute: serial COM13,115200 "$hdcp_out_ver v2.2" "$hdcp_out_ver v2.2" 0 2
+  Execute: balance_api 0 0
   
+- Title: Balance out Left Frequency
+  Retry Message: Error! Verify DUT is Power ON and Connected
+  Valid range: 950,1050
+  Unit: Hz
+  Delay: 2
+  Execute: balance_api 2 0
+
+- Title: Balance out Right RMS DIFF
+  Retry Message: Error! Verify DUT is Power ON and Connected
+  Valid range: 1530,1870
+  Unit: mV
+  Delay: 2
+  Execute: balance_api 0 1
+  
+- Title: Balance out Right Frequency
+  Retry Message: Error! Verify DUT is Power ON and Connected
+  Valid range: 950,1050
+  Unit: Hz
+  Delay: 2
+  Execute: balance_api 2 1
+  
+#################### DUT info check ###################
 - Title: Ethernet mac address check
   Retry Message: ''
   Valid range: 1,1
   Unit: N/A
   Delay: 2
-  Execute: telnet 192.168.100.191 50002 "?" "MAC:00:19:0B:8B:6B:4C" 3
+  Execute: telnet 192.168.100.191 50002 "?" "MAC:00:19:0B:8B:6B:4C" 3 5 --match_mode contains
   
 - Title: Ethernet H26X firmware check
   Retry Message: ''
   Valid range: 1,1
   Unit: N/A
   Delay: 2
-  Execute: telnet 192.168.100.191 50002 "?" "H26X_FW_VERSION:1.96" 3
+  Execute: telnet 192.168.100.191 50002 "?" "H26X_FW_VERSION:1.96" 3 5 --match_mode contains

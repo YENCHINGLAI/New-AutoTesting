@@ -1,5 +1,5 @@
 # QMessageBox 範例
-
+from PySide6.QtWidgets import QMessageBox
 
 def show_message_examples(self):
         """消息框示例"""

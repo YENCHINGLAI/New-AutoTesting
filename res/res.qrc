@@ -4,5 +4,6 @@
         <file>images\cyp.png</file>
         <file>images\Loading.png</file>
         <file>styles\ui_main.qss</file>
+        <file>report\report_template.html</file>
     </qresource>
 </RCC>

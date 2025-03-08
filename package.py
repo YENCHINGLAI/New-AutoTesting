@@ -42,6 +42,7 @@ def build(main, method):
 
         # 外觀樣式，會搬到打包後的專案內 (20250226圖形相關改用qrc)
         # '--include-data-dir=res=res',
+        '--include-data-dir=res/report=res/report',
 
         # API副程式
         '--include-data-files=tools/*.exe=tools/',          # tools資料夾下所有exe檔

@@ -3,8 +3,8 @@
 #===================================================================================================
 import os
 import sys
-import PySide6
 from pathlib import Path
+import PySide6
 from PySide6.QtWidgets import (
     QMainWindow, QCheckBox, QWidget, QVBoxLayout, QTableWidget,
     QTableWidgetItem, QHeaderView, QMessageBox, QFileDialog)
@@ -17,6 +17,7 @@ from src.views.ui_main_ui import Ui_MainWindow
 from src.utils.script import ScriptManager
 from src.utils.perform import PerformManager
 from src.utils.log import Log
+from src.utils.ui_update import UIUpdater
 
 #===================================================================================================
 # Environment
@@ -39,7 +40,7 @@ os.environ["QT_PLUGIN_PATH"] = PLUGIN_PATH
 if PYSIDE_PATH not in os.environ["PATH"]:
     os.environ["PATH"] = PYSIDE_PATH + os.pathsep + os.environ["PATH"]
 
-# 基礎路徑設置
+# 路徑設置
 # STYLE_FILE = os.path.join(ROOT_DIR, "res", "styles", "ui_main.qss")
 # ICON_FILE  = os.path.join(ROOT_DIR, "res", "icons" , "cyp.ico")
 # LOGO_FILE  = os.path.join(ROOT_DIR, "res", "images", "cyp.png")
@@ -58,8 +59,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def __init__(self):
         super(MainWindow, self).__init__()
-        self.setupUi(self)
         
+        self.ui_updater = UIUpdater()
+
+        self.setupUi(self)
+
         # 初始化 checkbox 狀態字典
         self.checkbox_states = {}
 
@@ -272,6 +276,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def connect_signals(self):
         """連接所有信號槽"""    
         try:
+            # 連接所有按鈕信號
             self.Btn_About.clicked.connect(self.show_about)
             self.Btn_Start.clicked.connect(self.start_test)
             self.Btn_ItemsCheckAll.clicked.connect(self.select_all_items)
@@ -280,6 +285,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.Btn_ReloadScript.clicked.connect(self.reload_script)
             self.Btn_Exit.clicked.connect(self.close)    
             self.actionExit.triggered.connect(self.close)
+
+            # 連接所有UI信號
+            self.ui_updater.items_bar_updated.connect(self.update_items_bar)
+            self.ui_updater.max_items_bar_updated.connect(self.set_max_items_bar_maximum)
+            self.ui_updater.max_current_bar_updated.connect(self.set_max_current_bar_maximum)
+            self.ui_updater.current_bar_updated.connect(self.update_current_bar)
+            self.ui_updater.current_line_updated.connect(self.update_current_line)
+            self.ui_updater.items_table_init.connect(self.init_result_table)
+            self.ui_updater.items_table_updated.connect(self.update_result_table)
+            self.ui_updater.qbox_message.connect(self.show_message_box)
+            self.ui_updater.fail_count.connect(self.fail_count)
+            self.ui_updater.pass_count.connect(self.pass_count)
         except Exception as e:
             Log.error(f"連接信號槽時發生錯誤: {str(e)}")
     
@@ -438,17 +455,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not self.loaded_script:
             return None
 
-        self.perform_manager = PerformManager()
-        self.perform_manager.items_bar_updated.connect(self.update_items_bar)
-        self.perform_manager.max_items_bar_updated.connect(self.set_max_items_bar_maximum)
-        self.perform_manager.current_bar_updated.connect(self.update_current_bar)
-        self.perform_manager.max_current_bar_updated.connect(self.set_max_current_bar_maximum)
-        self.perform_manager.current_line_updated.connect(self.update_current_line)
-        self.perform_manager.items_table_init.connect(self.init_result_table)
-        self.perform_manager.items_table_updated.connect(self.update_result_table)
-        self.perform_manager.qbox_message.connect(self.show_message_box)
-
+        self.perform_manager = PerformManager(self.ui_updater)
         self.perform_manager.start_execution(self.loaded_script)
+
+    def fail_count(self, valid_count):
+        self.Tb_CountFail.setText(f'{int(self.Tb_CountFail.text()) + valid_count}')
+
+    def pass_count(self, valid_count):
+        self.Tb_CountPass.setText(f'{int(self.Tb_CountPass.text()) + valid_count}')
 
     def show_message_box(self, title, message):
         """Slot 方法，顯示Msg Box。"""
@@ -473,6 +487,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def update_current_line(self, current_item):
         """Slot 方法，更新 當下執行的Line"""
         self.Tb_CurrentItem.setText(current_item) # 設定 bar value 值
+        self.Tb_CurrentItem.setReadOnly(True) # 設定為唯讀
 
     def init_result_table(self):
         """Slot 方法，初始化 result table 狀態。"""
@@ -492,10 +507,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         table = self.Table_TestResult
         
         if row_index >= 0 and row_index<table.rowCount():
-            if result:
-                background_color = QColor(77, 255, 77) # 綠色
-            else:
-                background_color = QColor(255, 77, 77) # 紅色
+            # self.pass_count() if result else self.fail_count()
+            background_color = QColor(77, 255, 77) if result else QColor(255, 77, 77)       # 綠色: 通過, 紅色: 失敗
 
             for col in range(table.columnCount()):
                 item = table.item(row_index, col)
@@ -505,9 +518,5 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 item.setBackground(QBrush(background_color))
 
             # 寫入測試值
-            table.item(row_index, 4).setText(str(value))
-            table.item(row_index, 5).setText(str(result))
-
-    def update_current_label_table(self, current_item):
-        """Slot 方法，設定 current label 的顯示。"""
-        self.Tb_CurrentItem.setText(current_item)
+            table.item(row_index, setting.TABLE_ENUM.VALUE.value).setText(str(value))
+            table.item(row_index, setting.TABLE_ENUM.RESULT.value).setText(str("Pass" if result else "Fail"))
