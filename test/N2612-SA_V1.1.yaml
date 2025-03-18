@@ -1,14 +1,14 @@
 Script:
-  Version: V1.00
-  Release note: First version
+  Version: 1.00
+  ReleaseNote: First version
   
 Product:
-  Model Name: N2612-SA
-  Mac Count: 2
-  Serial Count: 2
+  Name: N2612-SA|N2622-SA
+  UseMac: 2
+  UseSn: 2
   Version: V1.88
-  Mode: Paring
-  Other Message: AMX
+  TestMode: Paring
+  OtherMessage: AMX
   
 Items:   
 # 測試項目顯示名稱

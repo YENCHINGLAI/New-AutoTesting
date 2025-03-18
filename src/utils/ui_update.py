@@ -1,7 +1,13 @@
-import sys
+#===================================================================================================
+# Import the necessary modules
+#===================================================================================================
 from PySide6.QtCore import QObject,Signal
+
 from src.utils.log import Log
 
+#===================================================================================================
+# Execute
+#===================================================================================================
 class UIUpdater(QObject):
     """
     負責處理所有 UI 更新邏輯的類，將 UI 更新與業務邏輯分離
@@ -74,14 +80,14 @@ class UIUpdater(QObject):
         """
         self.qbox_message.emit(title, message)
 
-    def increment_fail_count(self):
+    def increment_fail_count(self, value):
         """
         失敗次數
         """
-        self.fail_count.emit(1)
+        self.fail_count.emit(value)
 
-    def increment_pass_count(self):
+    def increment_pass_count(self, value):
         """
         通過次數
         """
-        self.pass_count.emit(1)
+        self.pass_count.emit(value)

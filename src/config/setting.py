@@ -4,6 +4,9 @@ import enum
 class Setting:
     @staticmethod
     def GetConfigPath():
+        """
+        Get the configuration path
+        """
         import sys
         if sys.platform == "win32":
             return "data"
@@ -15,6 +18,9 @@ class Setting:
 
     @staticmethod
     def GetLogPath():
+        """
+        Get the log path
+        """
         import sys
         if sys.platform == "win32":
             return "logs"

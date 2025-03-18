@@ -4,18 +4,21 @@
 import os
 import sys
 from pathlib import Path
+
 import PySide6
+import PySide6.QtCore
 from PySide6.QtWidgets import (
     QMainWindow, QCheckBox, QWidget, QVBoxLayout, QTableWidget,
     QTableWidgetItem, QHeaderView, QMessageBox, QFileDialog)
 from PySide6.QtCore import QFile, QTextStream, Qt
 from PySide6.QtGui import QPixmap, QIcon, QBrush, QColor
 
-import res.res_rc
-import src.utils.setting as setting
+from res import res_rc
+from src.config import setting, config
 from src.views.ui_main_ui import Ui_MainWindow
 from src.utils.script import ScriptManager
 from src.utils.perform import PerformManager
+from src.utils.report import TestReport
 from src.utils.log import Log
 from src.utils.ui_update import UIUpdater
 
@@ -23,7 +26,6 @@ from src.utils.ui_update import UIUpdater
 # Environment
 #===================================================================================================
 # 將項目根目錄添加到 Python 路徑
-# ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ROOT_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
 sys.path.append(ROOT_DIR)
 
@@ -40,15 +42,11 @@ os.environ["QT_PLUGIN_PATH"] = PLUGIN_PATH
 if PYSIDE_PATH not in os.environ["PATH"]:
     os.environ["PATH"] = PYSIDE_PATH + os.pathsep + os.environ["PATH"]
 
-# 路徑設置
-# STYLE_FILE = os.path.join(ROOT_DIR, "res", "styles", "ui_main.qss")
-# ICON_FILE  = os.path.join(ROOT_DIR, "res", "icons" , "cyp.ico")
-# LOGO_FILE  = os.path.join(ROOT_DIR, "res", "images", "cyp.png")
-
 # 改用rcc檔案
 STYLE_FILE = ':styles/ui_main.qss'
 ICON_FILE  = ':icons/cyp.ico'
 LOGO_FILE  = ':images/cyp.png'
+
 #===================================================================================================
 # Window
 #===================================================================================================
@@ -66,6 +64,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # 初始化 checkbox 狀態字典
         self.checkbox_states = {}
+        self.checkboxes = [] # 保存所有checkbox
 
         # 初始化設定
         self.initialize_ui()
@@ -82,13 +81,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def initialize_ui(self):
         """初始化UI元件"""
         # 設定Logo
-        pixmap = QPixmap(LOGO_FILE)
-        scaled_pixmap = pixmap.scaled(
-            self.Lb_logo.size(), 
-            Qt.AspectRatioMode.KeepAspectRatio,  # 保持圖片比例
-            Qt.TransformationMode.SmoothTransformation  # 使用平滑轉換
-        )
-        self.Lb_logo.setPixmap(scaled_pixmap)
+        self.set_logo()
 
         # 設定MianWindow Icon
         self.setWindowIcon(QIcon(ICON_FILE))
@@ -98,6 +91,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # 初始化表格設置
         self.init_tables()
+
+    def set_logo(self):
+        """設定主程式LOGO"""
+        pixmap = QPixmap(LOGO_FILE)
+        scaled_pixmap = pixmap.scaled(
+            self.Lb_logo.size(), 
+            Qt.AspectRatioMode.KeepAspectRatio,  # 保持圖片比例
+            Qt.TransformationMode.SmoothTransformation  # 使用平滑轉換
+        )
+        self.Lb_logo.setPixmap(scaled_pixmap)
         
     def init_tables(self):
         """初始化表格相關設置"""
@@ -151,15 +154,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         def adjust_x(widget, x):
             widget.setGeometry(x, widget.y(), widget.width(), widget.height())
-        
-        def adjust_y(widget, y):
-            widget.setGeometry(widget.x(), y, widget.width(), widget.height())
-        
-        def adjust_width(widget, width):
-            widget.setGeometry(widget.x(), widget.y(), width, widget.height())
-        
-        def adjust_height(widget, height):
-            widget.setGeometry(widget.x(), widget.y(), widget.width(), height)
 
          # 如果有狀態欄，需要減去狀態欄高度
         if self.statusBar().isVisible():
@@ -256,29 +250,38 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         layout.addWidget(checkbox)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.setContentsMargins(0, 0, 0, 0)
-        return widget
+        return widget, checkbox
     
     def on_checkbox_changed(self, state, row):
         """checkbox事件"""
         is_checked = state == Qt.CheckState.Checked.value  # 獲取枚舉值
         self.checkbox_states[row] = is_checked
-        print(f"Row {row} checkbox {'checked' if is_checked else 'unchecked'}")
+        Log.debug(f"Row {row} checkbox {'checked' if is_checked else 'unchecked'}")
         
         # 獲取該行的數據
-        if state == Qt.CheckState.Checked:
+        if state == Qt.CheckState.Checked.value:
             item = self.Table_TestItems.item(row, 1)
             if item:
                 name = item.text()
                 print(f"Selected: {name}")
+    
+    def collect_selected_items(self):
+        """收集所有選中的測試項目索引"""
+        selected_item_indices = []
+        for row, checkbox in enumerate(self.checkboxes):
+            if checkbox.isChecked():
+                selected_item_indices.append(row) # 直接 append 行索引 row
+        return selected_item_indices
+    
 #===================================================================================================
 # Button function and signals
 #===================================================================================================
     def connect_signals(self):
         """連接所有信號槽"""    
         try:
-            # 連接所有按鈕信號
-            self.Btn_About.clicked.connect(self.show_about)
+            # 將按鈕信號綁定
             self.Btn_Start.clicked.connect(self.start_test)
+            self.Btn_About.clicked.connect(self.show_about)
             self.Btn_ItemsCheckAll.clicked.connect(self.select_all_items)
             self.Btn_ItemsUncheckAll.clicked.connect(self.deselect_all_items)
             self.Btn_OpenScript.clicked.connect(self.load_script)
@@ -286,7 +289,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.Btn_Exit.clicked.connect(self.close)    
             self.actionExit.triggered.connect(self.close)
 
-            # 連接所有UI信號
+            # 將UI信號綁定ui_updater
             self.ui_updater.items_bar_updated.connect(self.update_items_bar)
             self.ui_updater.max_items_bar_updated.connect(self.set_max_items_bar_maximum)
             self.ui_updater.max_current_bar_updated.connect(self.set_max_current_bar_maximum)
@@ -295,8 +298,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.ui_updater.items_table_init.connect(self.init_result_table)
             self.ui_updater.items_table_updated.connect(self.update_result_table)
             self.ui_updater.qbox_message.connect(self.show_message_box)
-            self.ui_updater.fail_count.connect(self.fail_count)
-            self.ui_updater.pass_count.connect(self.pass_count)
+            self.ui_updater.fail_count.connect(self.set_fail_count)
+            self.ui_updater.pass_count.connect(self.set_pass_count)
         except Exception as e:
             Log.error(f"連接信號槽時發生錯誤: {str(e)}")
     
@@ -316,14 +319,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def show_about(self):
         """關於視窗"""
-        ver = '1.0.0000'
-        user='TEST01'
+        user='TEST_01'
         text = "<center>" \
-           "<h1>Auto Testing</h1>" \
-           "&#8291;" \
-           "</center>" \
-           f"<p>User {user}<br/>" \
-           f"<p>Version {ver}<br/>" \
+            "<h1>Auto Testing</h1>" \
+            "&#8291;" \
+            "</center>" \
+            f"<p>User: {user}<br/>" \
+            f"<p>Version: {config.REAL_VERSION}<br/>" \
+            f"<p>Qt: {config.QT_VERSION}<br/>" \
+            f"<p>Py: {config.PY_VERSION}<br/>" \
+            f"<p>Update: {config.TIME_VERSION}<br/>" \
            "Copyright &copy; Cypress Technologies Inc.</p>"
         
         QMessageBox.about(self, "About Auto Testing", text)
@@ -337,11 +342,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
-        
+
         if reply == QMessageBox.StandardButton.Yes:
             # 執行測試邏輯
             print("開始測試...")
-            self.test_progress()
+            self.Run_Script(self.collect_selected_items())
         else:
             print("取消測試")
         
@@ -367,6 +372,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 #===================================================================================================
 # Script
 #===================================================================================================
+    def load_script(self):
+        file_name, _ = QFileDialog.getOpenFileName(
+            self, 
+            caption= "Open Test Script File",           # 對話框標題
+            dir= os.getcwd(),                           # 主程式所在目錄
+            filter= "YAML Files (*.yaml *.yml)",        # 篩選副檔名yaml, yml
+            options= QFileDialog.DontUseNativeDialog    # 使用Qt的對話框 (使用win10內建，會超級慢)
+            )
+        if file_name:
+            self.read_script(file_name)
+
     def read_script(self, file_name):
         script_manager = ScriptManager()
 
@@ -374,7 +390,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             try:           
                 loaded_script = script_manager.load_script(file_name)
                 if not loaded_script:
-                    QMessageBox.critical(self, "錯誤", f"載入錯誤: {file_name}")
+                    self.show_message_box("錯誤", f"腳本載入錯誤: {file_name}")
                     return
                 self.file_name = file_name
                 self.loaded_script = loaded_script
@@ -382,16 +398,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.update_items_table(loaded_script)
                 self.Lb_DUT.setText(loaded_script.product.model_name)
                 self.Tb_Mode.setText(loaded_script.product.mode)
-
                 Log.info(f'Load script successfully. {file_name}')
             except Exception as e:
-                Log.error(f"連接信號槽時發生錯誤: {str(e)}")
-                QMessageBox.critical(self, "錯誤", f"無法載入腳本: {str(e)}")
-    
-    def load_script(self):
-        file_name, _ = QFileDialog.getOpenFileName(self, caption= "Open YAML File", dir= os.getcwd(), filter= "YAML Files (*.yaml *.yml)", options= QFileDialog.DontUseNativeDialog)
-        if file_name:
-            self.read_script(file_name)
+                Log.error(f"載入腳本時發生錯誤: {str(e)}")
+                self.show_message_box("錯誤", f"無法載入腳本: {str(e)}")
 
     def reload_script(self):
         if self.file_name:
@@ -400,8 +410,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def update_test_table(self, script):
         try:
-            #if self.script_data and "Items" in script:
             set_table = self.Table_TestResult
+
             set_table.setRowCount(0)
             set_table.setRowCount(len(script.items))
 
@@ -418,74 +428,85 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return True
         except Exception as e:          
             Log.error(f"更新Test表格發生錯誤: {str(e)}")
-            QMessageBox.critical(self, "錯誤", f"無法更新Test表格: {str(e)}")
+            self.show_message_box("錯誤", f"無法更新Test表格: {str(e)}")
             return False
         
     def update_items_table(self, script):
         try:
-            set_table = self.Table_TestItems
-            set_table.setRowCount(len(script.items))
-            set_table.setColumnCount(2)
+            self.checkboxes = [] # Clear the checkboxes list for reload
+
+            set_table = self.Table_TestItems     
+            set_table.setRowCount(0)
+            set_table.setRowCount(len(script.items))    # 設置行數
+            set_table.setColumnCount(2)                 # checkbox, item name
             
             for index, item in enumerate(script.items):
                 # 創建checkbox
-                checkbox_widget = self.create_centered_checkbox()
+                checkbox_widget, checkbox = self.create_centered_checkbox() 
                 set_table.setCellWidget(index, 0, checkbox_widget)
                 
                 # 設置項目名稱
                 set_table.setItem(index, 1, QTableWidgetItem(item.title))
                 
                 # 連接checkbox信號
-                checkbox = checkbox_widget.findChild(QCheckBox)
-                if checkbox:  # 確保找到 checkbox
-                    checkbox.stateChanged.connect(
-                        lambda state, row=index: self.on_checkbox_changed(state, row))
+                self.checkboxes.append(checkbox)
+                checkbox.stateChanged.connect(
+                    lambda state, row=index: self.on_checkbox_changed(state, row))
 
             set_table.setEditTriggers(QTableWidget.NoEditTriggers)
             Log.info(f'Items table updated successfully.')
             return True
         except Exception as e:
             Log.error(f"更新Items表格發生錯誤: {str(e)}")
-            QMessageBox.critical(self, "錯誤", f"無法更新Items表格: {str(e)}")
+            self.show_message_box("錯誤", f"無法更新Items表格: {str(e)}")
             return False
 #===================================================================================================
 # Perform
 #===================================================================================================
-    def test_progress(self):
+    def Run_Script(self, selected_item_indices=None):
+        """執行測試"""
         if not self.loaded_script:
-            return None
+            self.show_message_box("錯誤", f"無腳本可執行")
+            return
 
-        self.perform_manager = PerformManager(self.ui_updater)
-        self.perform_manager.start_execution(self.loaded_script)
-
-    def fail_count(self, valid_count):
-        self.Tb_CountFail.setText(f'{int(self.Tb_CountFail.text()) + valid_count}')
-
-    def pass_count(self, valid_count):
-        self.Tb_CountPass.setText(f'{int(self.Tb_CountPass.text()) + valid_count}')
-
+        report = TestReport(self.Lb_Runcard.text(), self.Lb_DUT.text(), 
+                            self.Lb_T_MAC1.text(), self.Lb_T_SN.text(), 
+                            self.loaded_script.version, self.Lb_User.text(), 
+                            config.HOST_NAME, self.Tb_Mode.text()
+                            )
+        self.perform_manager = PerformManager(self.ui_updater, report, self.loaded_script, selected_item_indices)
+        self.perform_manager.start_execution(self.Lb_T_MAC1.text(), self.Lb_T_SN.text())
+    
     def show_message_box(self, title, message):
         """Slot 方法，顯示Msg Box。"""
         QMessageBox.information(self, title, message)
 
+    def set_fail_count(self, valid_count):
+        """Slot 方法，Pass計數更新"""
+        self.Tb_CountFail.setText(f'{valid_count}')
+
+    def set_pass_count(self, valid_count):
+        """Slot 方法，Fail計數更新"""
+        self.Tb_CountPass.setText(f'{valid_count}')
+
     def update_items_bar(self, progress_percentage):
-        """Slot 方法，更新 ProgressBar 值。"""
+        """Slot 方法，更新 '腳本測試進度Bar' 值"""
         self.PBar_Items.setValue(progress_percentage) # 設定 bar value 值
 
     def set_max_items_bar_maximum(self, max_value):
-        """Slot 方法，設定 ProgressBar 的 maximum 值。"""
+        """Slot 方法，設定 '腳本測試進度Bar ' Max值"""
         self.PBar_Items.setMaximum(max_value) # 設定 maximum 值
 
     def update_current_bar(self, progress_percentage):
-        """Slot 方法，更新 ProgressBar 值。"""
+        """Slot 方法，更新 '當前測試項目進度Bar' 值"""
         self.PBar_CurrentItem.setValue(progress_percentage) # 設定 bar value 值
 
     def set_max_current_bar_maximum(self, max_value):
-        """Slot 方法，設定 ProgressBar 的 maximum 值。"""
+        """Slot 方法，設定 '當前測試項目進度Bar' Max值"""
         self.PBar_CurrentItem.setMaximum(max_value) # 設定 maximum 值
 
     def update_current_line(self, current_item):
-        """Slot 方法，更新 當下執行的Line"""
+        """Slot 方法，更新 當前測試項目的Title"""
         self.Tb_CurrentItem.setText(current_item) # 設定 bar value 值
         self.Tb_CurrentItem.setReadOnly(True) # 設定為唯讀
 
@@ -502,12 +523,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if col == setting.TABLE_ENUM.VALUE.value or col == setting.TABLE_ENUM.RESULT.value:
                     item.setText('')
 
+        self.Tb_CountFail.setText('0')
+        self.Tb_CountPass.setText('0')
+        self.Tb_CurrentItem.setText('')
+
     def update_result_table(self, row_index, value, result):
-        """Slot 方法，更新 result table 狀態。"""
+        """Slot 方法，更新 result table 測試結果"""
         table = self.Table_TestResult
         
         if row_index >= 0 and row_index<table.rowCount():
-            # self.pass_count() if result else self.fail_count()
             background_color = QColor(77, 255, 77) if result else QColor(255, 77, 77)       # 綠色: 通過, 紅色: 失敗
 
             for col in range(table.columnCount()):

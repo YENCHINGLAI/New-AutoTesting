@@ -1,9 +1,16 @@
-import logging
+#===================================================================================================
+# Import the necessary modules
+#===================================================================================================
 import os
 import sys
 import time
-from src.utils.setting import Setting
+import logging
 
+from src.config.setting import Setting
+
+#===================================================================================================
+# Execute
+#===================================================================================================
 class Log:
     logger = logging.getLogger(__name__) # 使用 __name__ 作為 logger 名稱，更清晰
     logger.setLevel(logging.DEBUG) # 預設 logger 等級

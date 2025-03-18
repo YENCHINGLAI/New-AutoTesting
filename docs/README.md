@@ -20,6 +20,8 @@
 #   |    |    |-- ui_main.qss           #介面樣式
 #   |    |-- icons/
 #   |         |-- cyp.ico               #EXE logo
+#   |    |-- res.qrc
+#   |    |-- res_rc.py
 #   |-- packege                         #部屬用打包檔案
 #   |-- tools                           #API工具
 #   |-- venv                            #虛擬環境

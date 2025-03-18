@@ -1,5 +1,3 @@
-# nuitka --standalone --plugin-enable=pyside6 --include-data-dir=res=res --disable-console --remove-output --include-module=src --windows-icon-from-ico=res\icon\cyp.ico --output-filename=NewAutoTesting .\__main__.py
-
 import os
 import subprocess
 import sys
