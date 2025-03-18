@@ -2,7 +2,7 @@
 
 ## 中文 | [English](README_EN.md)
 
-[![Release](https://img.shields.io/badge/Python-3.11.6%2B-blue)]
+![Release](https://img.shields.io/badge/Python-3.11.6%2B-blue)
 
 - 新自動化測試主程式 (支持windows、Linux、macOS), UI使用Qt
 
@@ -19,6 +19,6 @@
 ### Qt功能
 [![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=PyQt5&repo=PyQt)](https://github.com/PyQt5/PyQt)  
 [![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=PyQt5&repo=PyQtClient)](https://github.com/PyQt5/PyQtClient)
-[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=UN-GCPDS&repo=picacg-qt)](https://github.com/tonquer/picacg-qt)
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=tonquer&repo=picacg-qt)](https://github.com/tonquer/picacg-qt)
 ### Qt外觀
 [![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=UN-GCPDS&repo=qt-material)](https://github.com/UN-GCPDS/qt-material)
