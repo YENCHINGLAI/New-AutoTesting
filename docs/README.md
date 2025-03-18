@@ -11,13 +11,13 @@
 - 執行YAML測試腳本, 並記錄db及生成html report
 
 ## 使用方式
-- 1. 下載最新版本 
-- 2. 解壓縮.7z
-- 3. 執行AutoTesting.exe
+- 1.下載最新版本 
+- 2.解壓縮.7z
+- 3.執行AutoTesting.exe
 
 ## 參考並感謝以下專案
 ### Qt功能
-[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=PyQt5&repo=PyQt)](https://github.com/PyQt5/PyQt)  
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=PyQt5&repo=PyQt)](https://github.com/PyQt5/PyQt)
 [![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=PyQt5&repo=PyQtClient)](https://github.com/PyQt5/PyQtClient)
 [![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=tonquer&repo=picacg-qt)](https://github.com/tonquer/picacg-qt)
 ### Qt外觀
