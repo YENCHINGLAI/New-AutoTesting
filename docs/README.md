@@ -1,30 +1,24 @@
-# 專案架構
-# New_AutoTesting/
-#   |-- __main__.py                     #專案主程式進入點
-#   |-- src/                            #程式碼
-#   |    |-- controllers/               #主程式
-#   |    |    |-- main_controller.py
-#   |    |-- models/                    #資料模型
-#   |    |    |-- data_model.py
-#   |    |-- views/                     #desigher產出之控件樣式
-#   |    |    |-- ui_main_ui.py
-#   |    |    |-- ui_main_ui.ui
-#   |    |-- utils/                     #使用的Tool
-#   |         |-- telnet
-#   |         |-- serial
-#   |         |-- ...
-#   |-- res/                            #程式所需資源 Ex.圖片,樣式
-#   |    |-- images/
-#   |    |    |-- cyp.png               #Loding圖案
-#   |    |-- styles/
-#   |    |    |-- ui_main.qss           #介面樣式
-#   |    |-- icons/
-#   |         |-- cyp.ico               #EXE logo
-#   |    |-- res.qrc
-#   |    |-- res_rc.py
-#   |-- packege                         #部屬用打包檔案
-#   |-- tools                           #API工具
-#   |-- venv                            #虛擬環境
-#   |-- requirements.txt                #專案套件訊息
-#   |-- docs                            #專案相關文件
-#   |    |-- README.md                  #專案架構說明
+# New AutoTesting
+
+## 中文 | [English](README_EN.md)
+
+[![Release](https://img.shields.io/badge/Python-3.11.6%2B-blue)]
+
+- 新自動化測試主程式 (支持windows、Linux、macOS), UI使用Qt
+
+## 功能
+- 主要目的為, 涵蓋所有型態之產品自動化測試
+- 執行YAML測試腳本, 並記錄db及生成html report
+
+## 使用方式
+- 1. 下載最新版本 
+- 2. 解壓縮.7z
+- 3. 執行AutoTesting.exe
+
+## 參考並感謝以下專案
+### Qt功能
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=PyQt5&repo=PyQt)](https://github.com/PyQt5/PyQt)  
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=PyQt5&repo=PyQtClient)](https://github.com/PyQt5/PyQtClient)
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=UN-GCPDS&repo=picacg-qt)](https://github.com/tonquer/picacg-qt)
+### Qt外觀
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=UN-GCPDS&repo=qt-material)](https://github.com/UN-GCPDS/qt-material)
