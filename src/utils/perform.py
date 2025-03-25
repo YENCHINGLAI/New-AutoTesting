@@ -10,8 +10,8 @@ from PySide6.QtCore import QRunnable, Signal, QThreadPool, QTimer, QObject
 from src.utils.script import Script, ScriptItems
 from src.utils.log import Log
 from src.utils.report import TestReport, ItemResult
-from src.utils.ui_update import UIUpdater
 from src.config import config
+from src.utils.commonUtils import UiUpdater
 
 #===================================================================================================
 # Execute
@@ -58,13 +58,12 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
     """
     執行 Items
     """
-    def __init__(self, ui_updater: UIUpdater, report: TestReport, script: Script, selected_item_indices=None):
+    def __init__(self, report: TestReport, script: Script, selected_item_indices=None):
         super().__init__()                      # 初始化 QObject (如果繼承自 QObject)
         self._perform_data = Perform()           # Perform 物件
         self._threadpool = QThreadPool()
         self._timer = QTimer(self)
         self._execution_queue = Queue()         # 執行隊列
-        self._ui_updater = ui_updater            # 創建 UI 更新物件
         self._perform_data.report = report       # 報告
         self._perform_data.script = script       # 腳本
         self._selected_item_indices = selected_item_indices
@@ -92,11 +91,11 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         self._total_items = len(convert_execute_items)
         
         # 初始化 UI
-        self._ui_updater.init_result_table()
-        self._ui_updater.set_max_bar(self._ui_updater.max_items_bar_updated, self._total_items)                 # 依照腳本item數量
-        self._ui_updater.set_max_bar(self._ui_updater.max_current_bar_updated, 5)                              # 將單一測試項目拆分為五階段
-        self._ui_updater.update_bar(self._ui_updater.items_bar_updated, 0)                                     # Item bar
-        self._ui_updater.update_bar(self._ui_updater.current_bar_updated, 0)                                   # Current bar
+        UiUpdater.init_result_table()
+        UiUpdater.set_max_bar(UiUpdater.max_items_bar_updated, self._total_items)                # 依照腳本item數量
+        UiUpdater.set_max_bar(UiUpdater.max_current_bar_updated, 5)                              # 將單一測試項目拆分為五階段
+        UiUpdater.update_bar(UiUpdater.items_bar_updated, 0)                                     # Item bar
+        UiUpdater.update_bar(UiUpdater.current_bar_updated, 0)                                   # Current bar
 
         Log.info('Start execution')
         self._is_running = True
@@ -133,15 +132,15 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
             return
         
         try:
-            self._ui_updater.update_bar(self._ui_updater.current_bar_updated, 0)
+            UiUpdater.update_bar(UiUpdater.current_bar_updated, 0)
             item_index, (original_index, item) = self._execution_queue.get()
             self._execution_queue.task_done()
-            self._prepare_and_execute_item(item_index, original_index, item)
+            self._prepare_and_execute_item(original_index, item)
 
         except Exception as e:
             Log.error(f'Error executing next item: {e}')
 
-    def _prepare_and_execute_item(self, queue_index, original_index, item):
+    def _prepare_and_execute_item(self, original_index, item):
         """
         準備並執行項目
         """
@@ -154,8 +153,8 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
             self._perform_data.sn
             )
         
-        self._ui_updater.update_bar(self._ui_updater.current_bar_updated, 1)
-        self._ui_updater.update_current_line(self._ui_updater.current_line_updated, item_name)
+        UiUpdater.update_bar(UiUpdater.current_bar_updated, 1)
+        UiUpdater.update_current_line(UiUpdater.current_line_updated, item_name)
 
         # 創建工作線程，使用閉包來傳遞上下文
         worker = CommandWorker(original_index, execute_command, item)
@@ -163,7 +162,7 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         worker.signals.error.connect(self._handle_error)
 
         # 啟動工作線程
-        self._ui_updater.update_bar(self._ui_updater.current_bar_updated, 2)
+        UiUpdater.update_bar(UiUpdater.current_bar_updated, 2)
         self._threadpool.start(worker)
         
     def _command_mac_sn_replace(self, command_template:str, mac_value:str, sn_value:str):
@@ -180,15 +179,15 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         """
         # Valid result
         validation_result = self._check_value_range(value, item.valid_min, item.valid_max)
-        self._ui_updater.update_bar(self._ui_updater.current_bar_updated, 3)
+        UiUpdater.update_bar(UiUpdater.current_bar_updated, 3)
  
         # Save result
         self._save_result(item, value, validation_result)
-        self._ui_updater.update_bar(self._ui_updater.current_bar_updated, 4)
+        UiUpdater.update_bar(UiUpdater.current_bar_updated, 4)
 
         # Update UI status
         self._update_result_with_ui(index, value, validation_result)
-        self._ui_updater.update_bar(self._ui_updater.current_bar_updated, 5)
+        UiUpdater.update_bar(UiUpdater.current_bar_updated, 5)
 
         # Next item
         self._timer.singleShot(item.delay*1000, self._execute_next_item)
@@ -208,19 +207,19 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         更新結果到UI
         """
         # 更新結果表格
-        self._ui_updater.update_result_table(index, value, check_result)
+        UiUpdater.update_result_table(index, value, check_result)
         
         # 更新通過/失敗計數
         if check_result:
             self._pass_count += 1
-            self._ui_updater.increment_pass_count(self._pass_count)
+            UiUpdater.increment_pass_count(self._pass_count)
         else:
             self._fail_count += 1
-            self._ui_updater.increment_fail_count(self._fail_count)
+            UiUpdater.increment_fail_count(self._fail_count)
 
         # 更新測試項進度
         completed_count = self._pass_count + self._fail_count
-        self._ui_updater.update_bar(self._ui_updater.items_bar_updated, completed_count) #會有問題，要再改
+        UiUpdater.update_bar(UiUpdater.items_bar_updated, completed_count) #會有問題，要再改
     
     def _save_result(self, item: ScriptItems, value, check_result):
         """
@@ -232,7 +231,7 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
     # 測試Fail處理
     def _handle_error(self, index, error):
         Log.debug(f"Handle error: {index}, err: {error}")
-        self._ui_updater.show_message("API 執行發生問題，已停止測試", error)
+        UiUpdater.show_message("API 執行發生問題，已停止測試", error)
         self._stop_execution()
 
     def _stop_execution(self):
@@ -248,4 +247,4 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         處理測試完成
         """
         self._stop_execution()
-        self._ui_updater.show_message("測試完成", "已完成所有測試項目")
+        UiUpdater.show_message("測試完成", "已完成所有測試項目")

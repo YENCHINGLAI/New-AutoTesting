@@ -17,3 +17,8 @@ HOST_NAME = socket.gethostname()
 REPORT_FILE_PATH = 'report'
 REPORT_TEMPLATE_PATH = os.path.join('res', 'report')
 REPORT_TEMPLATE_FILE = 'report_template.html'
+
+# 改用rcc檔案
+STYLE_FILE = ':styles/ui_main.qss'
+ICON_FILE  = ':icons/cyp.ico'
+LOGO_FILE  = ':images/cyp.png'

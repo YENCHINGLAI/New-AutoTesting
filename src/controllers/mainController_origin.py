@@ -20,7 +20,8 @@ from src.utils.script import ScriptManager
 from src.utils.perform import PerformManager
 from src.utils.report import TestReport
 from src.utils.log import Log
-from src.utils.ui_update import UIUpdater
+from src.utils.commonUtils import UiUpdater
+from src.controllers.mainBase import MainBase
 
 #===================================================================================================
 # Environment
@@ -42,35 +43,24 @@ os.environ["QT_PLUGIN_PATH"] = PLUGIN_PATH
 if PYSIDE_PATH not in os.environ["PATH"]:
     os.environ["PATH"] = PYSIDE_PATH + os.pathsep + os.environ["PATH"]
 
-# 改用rcc檔案
-STYLE_FILE = ':styles/ui_main.qss'
-ICON_FILE  = ':icons/cyp.ico'
-LOGO_FILE  = ':images/cyp.png'
-
 #===================================================================================================
 # Window
 #===================================================================================================
-class MainWindow(QMainWindow, Ui_MainWindow):
+class MainController(QMainWindow, Ui_MainWindow):
     """主窗口類，處理UI界面和所有相關的操作邏輯"""
     loaded_script = None
     file_name = None
 
     def __init__(self):
-        super(MainWindow, self).__init__()
-        
-        self.ui_updater = UIUpdater()
-
-        self.setupUi(self)
-
+        super(MainController, self).__init__()      
         # 初始化 checkbox 狀態字典
         self.checkbox_states = {}
         self.checkboxes = [] # 保存所有checkbox
 
-        # 初始化設定
-        self.initialize_ui()
-
-        # 連接所有信號槽
-        self.connect_signals()
+        # 初始化
+        self.setupUi(self)
+        self._initUi()
+        self._initSignals()
 
         # 設置最小視窗大小
         self.setMinimumSize(1390, 920)
@@ -78,23 +68,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # 最後再最大化
         self.showMaximized()
 
-    def initialize_ui(self):
+    def _initUi(self):
         """初始化UI元件"""
         # 設定Logo
-        self.set_logo()
+        self._setLogo()
 
         # 設定MianWindow Icon
-        self.setWindowIcon(QIcon(ICON_FILE))
+        self.setWindowIcon(QIcon(config.ICON_FILE))
 
         # 載入QSS
-        self.load_stylesheet(STYLE_FILE)
+        self.load_stylesheet(config.STYLE_FILE)
 
         # 初始化表格設置
         self.init_tables()
 
-    def set_logo(self):
+    def _setLogo(self):
         """設定主程式LOGO"""
-        pixmap = QPixmap(LOGO_FILE)
+        pixmap = QPixmap(config.LOGO_FILE)
         scaled_pixmap = pixmap.scaled(
             self.Lb_logo.size(), 
             Qt.AspectRatioMode.KeepAspectRatio,  # 保持圖片比例
@@ -134,7 +124,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             print(f"初始化表格時發生錯誤: {str(e)}")
 
     def load_stylesheet(self, filename):
-        """從指定文件加載並應用 Qt 樣式表。
+        """
+        從指定文件加載並應用 Qt 樣式表
+
         Args:
             filename (str): 樣式表文件的路徑
         """
@@ -147,7 +139,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             print(f"無法打開樣式表文件: {filename}")
 
     def update_layout(self):
-        """更新布局"""
+        """更新控件位置"""
         # 獲取窗口尺寸
         window_width = self.width()
         window_height = self.height()
@@ -276,7 +268,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 #===================================================================================================
 # Button function and signals
 #===================================================================================================
-    def connect_signals(self):
+    def _initSignals(self):
         """連接所有信號槽"""    
         try:
             # 將按鈕信號綁定
@@ -290,16 +282,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.actionExit.triggered.connect(self.close)
 
             # 將UI信號綁定ui_updater
-            self.ui_updater.items_bar_updated.connect(self.update_items_bar)
-            self.ui_updater.max_items_bar_updated.connect(self.set_max_items_bar_maximum)
-            self.ui_updater.max_current_bar_updated.connect(self.set_max_current_bar_maximum)
-            self.ui_updater.current_bar_updated.connect(self.update_current_bar)
-            self.ui_updater.current_line_updated.connect(self.update_current_line)
-            self.ui_updater.items_table_init.connect(self.init_result_table)
-            self.ui_updater.items_table_updated.connect(self.update_result_table)
-            self.ui_updater.qbox_message.connect(self.show_message_box)
-            self.ui_updater.fail_count.connect(self.set_fail_count)
-            self.ui_updater.pass_count.connect(self.set_pass_count)
+            UiUpdater.items_bar_updated.connect(self.update_items_bar)
+            UiUpdater.max_items_bar_updated.connect(self.set_max_items_bar_maximum)
+            UiUpdater.max_current_bar_updated.connect(self.set_max_current_bar_maximum)
+            UiUpdater.current_bar_updated.connect(self.update_current_bar)
+            UiUpdater.current_line_updated.connect(self.update_current_line)
+            UiUpdater.items_table_init.connect(self.init_result_table)
+            UiUpdater.items_table_updated.connect(self.update_result_table)
+            UiUpdater.qbox_message.connect(self.show_message_box)
+            UiUpdater.fail_count.connect(self.set_fail_count)
+            UiUpdater.pass_count.connect(self.set_pass_count)
         except Exception as e:
             Log.error(f"連接信號槽時發生錯誤: {str(e)}")
     
@@ -407,7 +399,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.file_name:
             self.read_script(self.file_name)
             Log.info(f'Reload script successfully.')
-
+    
     def update_test_table(self, script):
         try:
             set_table = self.Table_TestResult
@@ -474,7 +466,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.loaded_script.version, self.Lb_User.text(), 
                             config.HOST_NAME, self.Tb_Mode.text()
                             )
-        self.perform_manager = PerformManager(self.ui_updater, report, self.loaded_script, selected_item_indices)
+        self.perform_manager = PerformManager(report, self.loaded_script, selected_item_indices)
         self.perform_manager.start_execution(self.Lb_T_MAC1.text(), self.Lb_T_SN.text())
     
     def show_message_box(self, title, message):

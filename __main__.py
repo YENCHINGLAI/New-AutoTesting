@@ -25,7 +25,7 @@
 #
 #               佛祖保佑         永無BUG
 #
-#             Buddha bless      Never BUG
+#             Buddha bless      Never BUGG
 #
 #     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -56,25 +56,38 @@ import sys
 abs_pth = os.path.abspath(sys.argv[0])
 working_dir = os.path.dirname(abs_pth)
 os.chdir(working_dir)
-print(f"Working directory: {working_dir}")
 
-from PySide6.QtWidgets import QApplication
-from src.controllers.main_controller import MainWindow
+# from PySide6.QtWidgets import QApplication
+# from src.utils.application import QSingleApplication
+
+from src.controllers.mainController import MainController
 from src.utils.log import Log
 
 #===================================================================================================
 # Code
 #===================================================================================================
-def main():
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    return app.exec()
+# def main():
+      #阻擋重複開啟
+#     app = QSingleApplication('qtsingleapp-New AutoTesting',sys.argv)
+#     if app.isRunning():
+#         app.sendMessage("app is running")
+#         sys.exit(0)
+#     window = MainController()
+#     app.setActivationWindow(window)
+#     window.show()
+#     sys.exit(app.exec())
+
+    # Old
+    # app = QApplication(sys.argv)
+    # window = MainWindow()
+    # window.show()
+    # sys.exit(app.exec())
 
 if __name__ == "__main__":
     try:
         Log.init()
-        sys.exit(main())
+        MainController.main()
+        # main()
     except (RuntimeError, OSError) as e:  # 捕獲特定的異常
         Log.error(e)
         print(f"應用程序啟動錯誤: {e}")

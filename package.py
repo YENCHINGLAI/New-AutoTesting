@@ -9,8 +9,8 @@ import shutil
 
 # 主程式
 APP_NAME="AutoTesting"
-APP_VERSION="1.0.0"
-DESCRIPTION="Auto Testing Application"
+APP_VERSION="0.0.2"
+DESCRIPTION="New Auto Testing Application"
 COPYRIGHT="Copyright 2025"
 COMPANY_NAME="Cypress Technology Co., Ltd"
 

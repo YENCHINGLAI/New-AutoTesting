@@ -64,8 +64,8 @@ class TestReport:
         self.test_results = []
 
         # 初始化資料庫管理器
-        self.db = DatabaseManager()
-        self.db.initialize_database()
+        # self.db = DatabaseManager()
+        # self.db.initialize_database()
 
     def add_test_result(self, items_result : ItemResult):
         """
@@ -83,7 +83,7 @@ class TestReport:
         """
         設定測試結束
         """
-        self.end_time = datetime.datetime.now()  # 取得當前日期時間
+        self.end_time = datetime.now()  # 取得當前日期時間
         self.end_time_str = self.end_time.strftime("%H:%M:%S")  # 格式化時間
 
         self._calculate_total_time()  # 計算測試總時間

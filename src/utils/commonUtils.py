@@ -1,17 +1,20 @@
 #===================================================================================================
 # Import the necessary modules
 #===================================================================================================
-from PySide6.QtCore import QObject,Signal
+from PySide6.QtCore import QObject, Signal, Slot
 
 from src.utils.log import Log
 
 #===================================================================================================
 # Execute asdasd
 #===================================================================================================
-class UIUpdater(QObject):
+class _Signals(QObject):
     """
     負責處理所有 UI 更新邏輯的類，將 UI 更新與業務邏輯分離
-    """
+    """ 
+    #===================================================================================================
+    # Main window
+    #===================================================================================================
     # Progress Bar 更新
     items_bar_updated = Signal(int)             # 整個腳本的進度Bar
     max_items_bar_updated = Signal(int)         # 設定Bar最大值
@@ -27,6 +30,18 @@ class UIUpdater(QObject):
     qbox_message = Signal(str, str)             # 顯示MessageBox訊息
     fail_count = Signal(int)                    # 失敗次數
     pass_count = Signal(int)                    # 通過次數
+    
+    #===================================================================================================
+    # update dialog
+    #===================================================================================================
+    # 顯示 Update 對話框
+    updateDialogShowed = Signal()
+    # Update 文字
+    updateTextChanged = Signal(str, str, str)
+    # 更新完成
+    updateFinished = Signal(str)
+    # 更新進度條 (目前值,最小值,最大值)
+    updateProgressChanged = Signal(int, int, int)
 
     def __init__(self):
         super().__init__()
@@ -91,3 +106,5 @@ class UIUpdater(QObject):
         通過次數
         """
         self.pass_count.emit(value)
+    
+UiUpdater = _Signals()
