@@ -126,7 +126,13 @@
             display: inline-block;
             /* 讓 value 也變成 inline-block 元素，和 label 水平排列 */
         }
-
+		
+		.pass-count {
+			color: #27ae60;
+            /* 綠色，標示成功次數 */
+            font-weight: bold;
+        }
+		
         .fail-count {
             color: #e74c3c;
             /* 紅色，標示失敗次數 */
@@ -200,13 +206,17 @@
                 <span class="value">{{ total_time }}</span>
             </div>
             <!-- 測試結果 -->
-            <div class="grid-item">
-                <span class="label">Total tests:</span>
-                <span class="value">{{ total_tests }}</span>
+			<div class="grid-item">
+                <span class="label">Pass:</span>
+                <span class="value pass-count">{{ pass_tests }}</span>
             </div>
             <div class="grid-item">
                 <span class="label">Fails:</span>
                 <span class="value fail-count">{{ fail_tests }}</span>
+            </div>
+			<div class="grid-item">
+                <span class="label">Total tests:</span>
+                <span class="value">{{ total_tests }}</span>
             </div>
             <div class="grid-item">
                 <span class="label">Final Result:</span>

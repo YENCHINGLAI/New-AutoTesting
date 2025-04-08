@@ -18,7 +18,7 @@ from src.config import setting, config
 from src.views.ui_main_ui import Ui_MainWindow
 from src.utils.script import ScriptManager
 from src.utils.perform import PerformManager
-from src.utils.report import TestReport
+from src.utils.record import TestReport
 from src.utils.log import Log
 from src.utils.commonUtils import UiUpdater
 from src.controllers.mainBase import MainBase
@@ -286,12 +286,12 @@ class MainController(QMainWindow, Ui_MainWindow):
             UiUpdater.max_items_bar_updated.connect(self.set_max_items_bar_maximum)
             UiUpdater.max_current_bar_updated.connect(self.set_max_current_bar_maximum)
             UiUpdater.current_bar_updated.connect(self.update_current_bar)
-            UiUpdater.current_line_updated.connect(self.update_current_line)
-            UiUpdater.items_table_init.connect(self.init_result_table)
-            UiUpdater.items_table_updated.connect(self.update_result_table)
-            UiUpdater.qbox_message.connect(self.show_message_box)
-            UiUpdater.fail_count.connect(self.set_fail_count)
-            UiUpdater.pass_count.connect(self.set_pass_count)
+            UiUpdater.currentItemChanged.connect(self.update_current_line)
+            UiUpdater.itemsTableInit.connect(self.init_result_table)
+            UiUpdater.itemsTableChanged.connect(self.update_result_table)
+            UiUpdater.messageBoxDialog.connect(self.show_message_box)
+            UiUpdater.failCountChanged.connect(self.set_fail_count)
+            UiUpdater.passCountChanged.connect(self.set_pass_count)
         except Exception as e:
             Log.error(f"連接信號槽時發生錯誤: {str(e)}")
     

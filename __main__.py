@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 #
 #                       _oo0oo_
 #                      o8888888o
@@ -32,7 +31,6 @@
 #===================================================================================================
 # Splash screen
 #===================================================================================================
-# Loading screen excemple
 import os
 import tempfile
 # 檢查是否在 Nuitka 打包的環境中
@@ -57,37 +55,16 @@ abs_pth = os.path.abspath(sys.argv[0])
 working_dir = os.path.dirname(abs_pth)
 os.chdir(working_dir)
 
-# from PySide6.QtWidgets import QApplication
-# from src.utils.application import QSingleApplication
-
 from src.controllers.mainController import MainController
 from src.utils.log import Log
 
 #===================================================================================================
 # Code
 #===================================================================================================
-# def main():
-      #阻擋重複開啟
-#     app = QSingleApplication('qtsingleapp-New AutoTesting',sys.argv)
-#     if app.isRunning():
-#         app.sendMessage("app is running")
-#         sys.exit(0)
-#     window = MainController()
-#     app.setActivationWindow(window)
-#     window.show()
-#     sys.exit(app.exec())
-
-    # Old
-    # app = QApplication(sys.argv)
-    # window = MainWindow()
-    # window.show()
-    # sys.exit(app.exec())
-
 if __name__ == "__main__":
     try:
         Log.init()
         MainController.main()
-        # main()
     except (RuntimeError, OSError) as e:  # 捕獲特定的異常
         Log.error(e)
         print(f"應用程序啟動錯誤: {e}")

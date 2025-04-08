@@ -2,37 +2,31 @@ from PySide6.QtCore import QFile, QTextStream, Qt
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtWidgets import QMainWindow, QHeaderView
 
-import res.res_rc
+from src.views.ui_main_ui import Ui_MainWindow
 from src.utils.commonUtils import UiUpdater
-from src.config import config
 from src.utils.log import Log
+from src.config import config
+import res.res_rc
 
-class MainBase(QMainWindow):
+class MainBase(QMainWindow, Ui_MainWindow):
     def _initUi(self):
         """初始化UI元件""" 
         self.setupUi(self)
 
-        # 設定Logo
-        self._setLogo()
-
-        # 設定MianWindow Icon
-        self.setWindowIcon(QIcon(config.ICON_FILE))
-
         # 載入QSS
         self._loadStylesheet(config.STYLE_FILE)
+
+        # 設定Logo
+        self._setLogo()
 
         # 初始化表格設置
         self._initTables()
 
-    def _setLogo(self):
-        """設定主程式LOGO"""
-        pixmap = QPixmap(config.LOGO_FILE)
-        scaled_pixmap = pixmap.scaled(
-            self.Lb_logo.size(), 
-            Qt.AspectRatioMode.KeepAspectRatio,  # 保持圖片比例
-            Qt.TransformationMode.SmoothTransformation  # 使用平滑轉換
-        )
-        self.Lb_logo.setPixmap(scaled_pixmap)
+        # 設置最小視窗大小
+        self.setMinimumSize(1390, 920)
+        
+        # 最大化
+        self.showMaximized()
 
     def _loadStylesheet(self, filename):
         """
@@ -48,6 +42,19 @@ class MainBase(QMainWindow):
             style_file.close()
         else:
             print(f"無法打開樣式表文件: {filename}")
+
+    def _setLogo(self):
+        """設定主程式內及視窗LOGO"""
+        pixmap = QPixmap(config.LOGO_FILE)
+        scaled_pixmap = pixmap.scaled(
+            self.Lb_logo.size(), 
+            Qt.AspectRatioMode.KeepAspectRatio,  # 保持圖片比例
+            Qt.TransformationMode.SmoothTransformation  # 使用平滑轉換
+        )
+        self.Lb_logo.setPixmap(scaled_pixmap)
+
+        # 設定MianWindow Icon
+        self.setWindowIcon(QIcon(config.ICON_FILE))
 
     def _initTables(self):
         """初始化表格相關設置"""
@@ -89,24 +96,127 @@ class MainBase(QMainWindow):
             self.Btn_About.clicked.connect(self._initUpdate)
             self.Btn_ItemsCheckAll.clicked.connect(self.select_all_items)
             self.Btn_ItemsUncheckAll.clicked.connect(self.deselect_all_items)
-            self.Btn_OpenScript.clicked.connect(self.load_script)
-            self.Btn_ReloadScript.clicked.connect(self.reload_script)
+            self.Btn_OpenScript.clicked.connect(self._load_script)
+            self.Btn_ReloadScript.clicked.connect(self._reload_script)
             self.Btn_Exit.clicked.connect(self.close)    
             self.actionExit.triggered.connect(self.close)
 
             # 將UI信號綁定ui_updater
-            UiUpdater.items_bar_updated.connect(self.update_items_bar)
-            UiUpdater.max_items_bar_updated.connect(self.set_max_items_bar_maximum)
-            UiUpdater.max_current_bar_updated.connect(self.set_max_current_bar_maximum)
-            UiUpdater.current_bar_updated.connect(self.update_current_bar)
-            UiUpdater.current_line_updated.connect(self.update_current_line)
-            UiUpdater.items_table_init.connect(self.init_result_table)
-            UiUpdater.items_table_updated.connect(self.update_result_table)
-            UiUpdater.qbox_message.connect(self.show_message_box)
-            UiUpdater.fail_count.connect(self.set_fail_count)
-            UiUpdater.pass_count.connect(self.set_pass_count)
+            UiUpdater.startBtnChanged.connect(self.setStartBtnText)
+            UiUpdater.scriptProgressChanged.connect(self.update_script_progress)
+            UiUpdater.itemProgressChanged.connect(self.update_item_progress)
+            UiUpdater.currentItemChanged.connect(self.update_current_line)
+            UiUpdater.itemsTableInit.connect(self.init_result_table)
+            UiUpdater.itemsTableChanged.connect(self.update_result_table)
+            UiUpdater.messageBoxDialog.connect(self.show_message_box)
+            UiUpdater.failCountChanged.connect(self.set_fail_count)
+            UiUpdater.passCountChanged.connect(self.set_pass_count)
 
+            # Update視窗
             UiUpdater.updateDialogShowed.connect(self._initUpdate)
         except Exception as e:
             Log.error(f"連接信號槽時發生錯誤: {str(e)}")
+
+    def resizeEvent(self, event):
+        """處理窗口大小改變事件"""
+        super().resizeEvent(event)
+        self._updateLayout()      
+    
+    def changeEvent(self, event):
+        """處理窗口狀態改變事件"""
+        super().changeEvent(event)
+        if event.type() == event.Type.WindowStateChange:
+            if self.windowState() == Qt.WindowState.WindowNoState:
+                self._updateLayout()
+            elif self.windowState() == Qt.WindowState.WindowMaximized:
+                self._updateLayout()
+      
+    def keyPressEvent(self, event):
+        """處理按鍵事件，按ESC鍵可以退出全螢幕模式"""
+        if event.key() == Qt.Key.Key_Escape and (self.isMaximized() or self.isFullScreen()):
+            self.showNormal()
+        else:
+            super().keyPressEvent(event)
+
+    def _updateLayout(self):
+        """更新控件位置"""
+        # 獲取窗口尺寸
+        window_width = self.width()
+        window_height = self.height()
+
+         # 如果有狀態欄，需要減去狀態欄高度
+        if self.statusBar().isVisible():
+            window_height -= self.statusBar().height()
+        
+        if self.menuBar().isVisible():
+            window_height -= self.menuBar().height()
+
+        # 基本參數
+        margin = 20 # 邊距
+        right_panel_width = self.Gbox_USER.width() # 右側面板寬度
+        right_panel_height = self.Gbox_USER.height() # 右側面板高度
+        bot_point_y = self.Table_TestItems.y() + self.Table_TestItems.height() # 表格底部Y軸位置  
+
+        # 計算位置調整值
+        right_panel_x = window_width - right_panel_width - margin # 右側面板X軸位置
+        height_adjustment = window_height - margin - bot_point_y  # 物件之間距離
+
+        #===================================================================================================
+        # 右側物件位置處理
+        #===================================================================================================   
+        def adjust_x(widget, x):
+            widget.setGeometry(x, widget.y(), widget.width(), widget.height())   
+
+        # Adjust right-side boxes (Gbox_TX, Gbox_RX, Gbox_USER)
+        adjust_x(self.Lb_Mode, right_panel_x)
+        adjust_x(self.Tb_Mode, right_panel_x + self.Lb_Mode.width() + margin)
+        # adjust_x(self.Gbox_USER, right_panel_x)
+        
+        self.Gbox_USER.setGeometry(right_panel_x, self.Gbox_USER.y(), 
+                                      right_panel_width, right_panel_height)
+        self.Gbox_TX.setGeometry(right_panel_x, self.Gbox_TX.y() + height_adjustment, 
+                                    right_panel_width, right_panel_height)
+        self.Gbox_RX.setGeometry(right_panel_x, self.Gbox_RX.y() + height_adjustment, 
+                                    right_panel_width, right_panel_height)
+        self.GBox_PROGRESS.setGeometry(right_panel_x, self.GBox_PROGRESS.y() + height_adjustment, 
+                                          right_panel_width, self.GBox_PROGRESS.height())
+        
+        #===================================================================================================
+        # 左側物件位置處理
+        #===================================================================================================       
+        # 調整 'Items Table' 位置、大小
+        self.Table_TestItems.setGeometry(
+            self.Table_TestItems.x(),
+            self.Table_TestItems.y(),
+            self.Table_TestItems.width(),
+            self.Table_TestItems.height() + height_adjustment
+        )
+
+        # 計算 'Result Table' 當前最大容許寬度
+        table_width = right_panel_x - margin - self.Table_TestResult.x()
+
+        # 調整 'Result Table' 位置、大小
+        self.Table_TestResult.setGeometry(
+            self.Table_TestResult.x(),  # Start after TestItems table + margin
+            self.Table_TestResult.y(),
+            table_width,
+            self.Table_TestResult.height() + height_adjustment
+        )
+
+        # 將 '產品名稱' 對齊 'Result Table'
+        dut_x = self.Table_TestResult.x() + table_width - self.Lb_DUT.width()
+        self.Lb_DUT.setGeometry(
+            dut_x,
+            self.Lb_DUT.y(),
+            self.Lb_DUT.width(),
+            self.Lb_DUT.height()
+        )
+        
+        # 將 '腳本ProgressBar' 對齊 'Result Table'
+        self.PBar_Items.setGeometry(
+            self.Table_TestResult.x(),
+            self.PBar_Items.y() + height_adjustment,
+            table_width,
+            self.PBar_Items.height()
+        )
     

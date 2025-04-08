@@ -14,17 +14,16 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor
 
-from src.views.ui_main_ui import Ui_MainWindow
-from src.controllers.mainBase import MainBase
+# from src.views.ui_main_ui import Ui_MainWindow
 from src.config import setting, config
 from src.utils.application import QSingleApplication
 from src.utils.script import ScriptManager
 from src.utils.perform import PerformManager
-from src.utils.report import TestReport
+from src.utils.record import TestReport
 from src.utils.log import Log
-
+from src.controllers.mainBase import MainBase
 from src.controllers.updateDialog import UpdateDialog
-
+from src.controllers.noticeDialog import NoticeDialog
 #===================================================================================================
 # Environment
 #===================================================================================================
@@ -48,7 +47,7 @@ if PYSIDE_PATH not in os.environ["PATH"]:
 #===================================================================================================
 # Window
 #===================================================================================================
-class MainController(MainBase, Ui_MainWindow):
+class MainController(MainBase):
     """主窗口類，處理UI界面和所有相關的操作邏輯"""
     loaded_script = None
     file_name = None
@@ -59,114 +58,13 @@ class MainController(MainBase, Ui_MainWindow):
         # 初始化 checkbox 狀態字典
         self.checkbox_states = {}
         self.checkboxes = [] # 保存所有checkbox
+        self._perform_manager : PerformManager
 
         # 初始化
         self._initUi()
         self._initSignals()
 
-        # 設置最小視窗大小
-        self.setMinimumSize(1390, 920)
-
-        # 最後再最大化
-        self.showMaximized()
-
-    def resizeEvent(self, event):
-        """處理窗口大小改變事件"""
-        super().resizeEvent(event)
-        self._updateLayout()      
-    
-    def changeEvent(self, event):
-        """處理窗口狀態改變事件"""
-        super().changeEvent(event)
-        if event.type() == event.Type.WindowStateChange:
-            if self.windowState() == Qt.WindowState.WindowNoState:
-                self._updateLayout()
-            elif self.windowState() == Qt.WindowState.WindowMaximized:
-                self._updateLayout()
-      
-    def keyPressEvent(self, event):
-        """處理按鍵事件，按ESC鍵可以退出全螢幕模式"""
-        if event.key() == Qt.Key.Key_Escape and (self.isMaximized() or self.isFullScreen()):
-            self.showNormal()
-        else:
-            super().keyPressEvent(event)
-
-    def _updateLayout(self):
-        """更新控件位置"""
-        # 獲取窗口尺寸
-        window_width = self.width()
-        window_height = self.height()
-
-        def adjust_x(widget, x):
-            widget.setGeometry(x, widget.y(), widget.width(), widget.height())
-
-         # 如果有狀態欄，需要減去狀態欄高度
-        if self.statusBar().isVisible():
-            window_height -= self.statusBar().height()
-        
-        if self.menuBar().isVisible():
-            window_height -= self.menuBar().height()
-
-        # 基本參數
-        margin = 20 # 邊距
-        right_panel_width = self.Gbox_USER.width() # 右側面板寬度
-        right_panel_height = self.Gbox_USER.height() # 右側面板高度
-        bot_point_y = self.Table_TestItems.y() + self.Table_TestItems.height() # 表格底部Y軸位置  
-
-        # 計算位置調整值
-        right_panel_x = window_width - right_panel_width - margin # 右側面板X軸位置
-        height_adjustment = window_height - margin - bot_point_y # 高度調整值
-
-        # Adjust right-side boxes (Gbox_TX, Gbox_RX, Gbox_USER)
-        adjust_x(self.Lb_Mode, right_panel_x)
-        adjust_x(self.Tb_Mode, right_panel_x + self.Lb_Mode.width() + margin)
-        adjust_x(self.Gbox_USER, right_panel_x)
-        
-        self.Gbox_USER.setGeometry(right_panel_x, self.Gbox_USER.y(), 
-                                      right_panel_width, right_panel_height)
-        self.Gbox_TX.setGeometry(right_panel_x, self.Gbox_TX.y() + height_adjustment, 
-                                    right_panel_width, right_panel_height)
-        self.Gbox_RX.setGeometry(right_panel_x, self.Gbox_RX.y() + height_adjustment, 
-                                    right_panel_width, right_panel_height)
-        self.GBox_PROGRESS.setGeometry(right_panel_x, self.GBox_PROGRESS.y() + height_adjustment, 
-                                          right_panel_width, self.GBox_PROGRESS.height())
-        
-        # Calculate the available width for 'Table_TestResult'
-        table_width = right_panel_x - margin - self.Table_TestResult.x()
-
-        # Adjust 'Table_TestResult' width
-        self.Table_TestResult.setGeometry(
-            self.Table_TestResult.x(),  # Start after TestItems table + margin
-            self.Table_TestResult.y(),
-            table_width,
-            self.Table_TestResult.height() + height_adjustment
-        )
-        
-        # Adjust progress bar width and position to match table
-        self.PBar_Items.setGeometry(
-            self.Table_TestResult.x(),
-            self.PBar_Items.y() + height_adjustment,
-            table_width,
-            self.PBar_Items.height()
-        )
-
-        self.Table_TestItems.setGeometry(
-            self.Table_TestItems.x(),  # Start after TestItems table + margin
-            self.Table_TestItems.y(),
-            self.Table_TestItems.width(),
-            self.Table_TestItems.height() + height_adjustment
-        )
-        
-        # Adjust DUT label to be centered above the table
-        dut_x = self.Table_TestResult.x() + table_width - self.Lb_DUT.width()
-        self.Lb_DUT.setGeometry(
-            dut_x,
-            self.Lb_DUT.y(),
-            self.Lb_DUT.width(),
-            self.Lb_DUT.height()
-        )
-
-    def create_centered_checkbox(self):     
+    def _create_centered_checkbox(self):     
         """創建居中的checkbox widget"""    
         checkbox = QCheckBox()
         widget = QWidget()
@@ -176,7 +74,7 @@ class MainController(MainBase, Ui_MainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         return widget, checkbox
     
-    def on_checkbox_changed(self, state, row):
+    def _on_checkbox_changed(self, state, row):
         """checkbox事件"""
         is_checked = state == Qt.CheckState.Checked.value  # 獲取枚舉值
         self.checkbox_states[row] = is_checked
@@ -189,7 +87,7 @@ class MainController(MainBase, Ui_MainWindow):
                 name = item.text()
                 print(f"Selected: {name}")
     
-    def collect_selected_items(self):
+    def _collect_selected_items(self):
         """收集所有選中的測試項目索引"""
         selected_item_indices = []
         for row, checkbox in enumerate(self.checkboxes):
@@ -201,7 +99,7 @@ class MainController(MainBase, Ui_MainWindow):
 # Button function and signals
 #===================================================================================================
     def _initUpdate(self):
-        self.udialog = UpdateDialog()
+        self.udialog = UpdateDialog(self)
         self.udialog.show()
 
     def closeEvent(self, event):
@@ -236,23 +134,31 @@ class MainController(MainBase, Ui_MainWindow):
 
     def start_test(self):
         """開始測試前的確認"""
-        reply = QMessageBox.question(
-            self,
-            "確認開始測試",
-            "是否開始執行測試？",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
-        )
-
-        if reply == QMessageBox.StandardButton.Yes:
-            # 執行測試邏輯
-            print("開始測試...")
-            self.Run_Script(self.collect_selected_items())
+        if self.getStartBtnText()=='Stop':
+            reply = QMessageBox.question(
+                self,
+                "確認停止測試",
+                "是否停止執行測試？",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            if reply == QMessageBox.StandardButton.Yes:
+                self.setStartBtnText('Start')
+                self._perform_manager.stop_execution()
         else:
-            print("取消測試")
-        
-    def stop_test(self):
-        pass
+            reply = QMessageBox.question(
+                self,
+                "確認開始測試",
+                "是否開始執行測試？",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+
+            if reply == QMessageBox.StandardButton.Yes:
+                # 執行測試邏輯
+                print("開始測試...")
+                self.setStartBtnText('Stop')
+                self.Run_Script()
 
     def select_all_items(self):
         """全選所有測試項目"""
@@ -273,7 +179,7 @@ class MainController(MainBase, Ui_MainWindow):
 #===================================================================================================
 # Script
 #===================================================================================================
-    def load_script(self):
+    def _load_script(self):
         file_name, _ = QFileDialog.getOpenFileName(
             self, 
             caption= "Open Test Script File",           # 對話框標題
@@ -282,9 +188,9 @@ class MainController(MainBase, Ui_MainWindow):
             options= QFileDialog.DontUseNativeDialog    # 使用Qt的對話框 (使用win10內建，會超級慢)
             )
         if file_name:
-            self.read_script(file_name)
+            self._read_script(file_name)
 
-    def read_script(self, file_name):
+    def _read_script(self, file_name):
         script_manager = ScriptManager()
 
         if file_name:
@@ -304,9 +210,9 @@ class MainController(MainBase, Ui_MainWindow):
                 Log.error(f"載入腳本時發生錯誤: {str(e)}")
                 self.show_message_box("錯誤", f"無法載入腳本: {str(e)}")
 
-    def reload_script(self):
+    def _reload_script(self):
         if self.file_name:
-            self.read_script(self.file_name)
+            self._read_script(self.file_name)
             Log.info(f'Reload script successfully.')
     
     def update_test_table(self, script):
@@ -315,13 +221,13 @@ class MainController(MainBase, Ui_MainWindow):
 
             set_table.setRowCount(0)
             set_table.setRowCount(len(script.items))
-
+            
+            # 設置項目名稱 
             for index, item in enumerate(script.items):
-                # 設置項目名稱 
                 set_table.setItem(index, setting.TABLE_ENUM.TITLE.value, QTableWidgetItem(item.title))
-                set_table.setItem(index, setting.TABLE_ENUM.UNIT.value, QTableWidgetItem(item.unit))
+                set_table.setItem(index, setting.TABLE_ENUM.UNIT.value,  QTableWidgetItem(item.unit))
                 set_table.setItem(index, setting.TABLE_ENUM.MIN_VALID.value, QTableWidgetItem(str(item.valid_min)))
-                set_table.setItem(index, setting.TABLE_ENUM.MAX_VALID.value, QTableWidgetItem(str(item.valid_max)))        
+                set_table.setItem(index, setting.TABLE_ENUM.MAX_VALID.value, QTableWidgetItem(str(item.valid_max)))
             # 不可編輯    
             set_table.setEditTriggers(QTableWidget.NoEditTriggers)
             
@@ -343,7 +249,7 @@ class MainController(MainBase, Ui_MainWindow):
             
             for index, item in enumerate(script.items):
                 # 創建checkbox
-                checkbox_widget, checkbox = self.create_centered_checkbox() 
+                checkbox_widget, checkbox = self._create_centered_checkbox() 
                 set_table.setCellWidget(index, 0, checkbox_widget)
                 
                 # 設置項目名稱
@@ -352,7 +258,7 @@ class MainController(MainBase, Ui_MainWindow):
                 # 連接checkbox信號
                 self.checkboxes.append(checkbox)
                 checkbox.stateChanged.connect(
-                    lambda state, row=index: self.on_checkbox_changed(state, row))
+                    lambda state, row=index: self._on_checkbox_changed(state, row))
 
             set_table.setEditTriggers(QTableWidget.NoEditTriggers)
             Log.info(f'Items table updated successfully.')
@@ -361,58 +267,79 @@ class MainController(MainBase, Ui_MainWindow):
             Log.error(f"更新Items表格發生錯誤: {str(e)}")
             self.show_message_box("錯誤", f"無法更新Items表格: {str(e)}")
             return False
+        
 #===================================================================================================
 # Perform
 #===================================================================================================
-    def Run_Script(self, selected_item_indices=None):
+    def Run_Script(self):
         """執行測試"""
         if not self.loaded_script:
             self.show_message_box("錯誤", f"無腳本可執行")
             return
 
-        report = TestReport(self.Lb_Runcard.text(), self.Lb_DUT.text(), 
-                            self.Lb_T_MAC1.text(), self.Lb_T_SN.text(), 
-                            self.loaded_script.version, self.Lb_User.text(), 
-                            config.HOST_NAME, self.Tb_Mode.text()
-                            )
-        self.perform_manager = PerformManager(report, self.loaded_script, selected_item_indices)
-        self.perform_manager.start_execution(self.Lb_T_MAC1.text(), self.Lb_T_SN.text())
+        report = TestReport(
+            self.Lb_Runcard.text(), 
+            self.Lb_DUT.text(), 
+            self.Lb_T_MAC1.text(), 
+            self.Lb_T_SN.text(), 
+            self.loaded_script.version, 
+            self.Lb_User.text(), 
+            config.HOST_NAME, 
+            self.Tb_Mode.text()
+            )
+        
+        self._perform_manager = PerformManager(report, self.loaded_script, self._collect_selected_items())
+        self._perform_manager.start_execution(self.Lb_T_MAC1.text(), self.Lb_T_SN.text())
     
+    def getStartBtnText(self):
+        return self.Btn_Start.text()
+
+    def setStartBtnText(self,text):
+        self.Btn_Start.setText(text)
+
+    def update_item_progress(self, currentValue, maxValue):
+        """Slot，更新 '當前測試項目進度Bar' 值"""
+        self.PBar_CurrentItem.setMaximum(maxValue)
+        self.PBar_CurrentItem.setValue(currentValue)
+    
+    def update_script_progress(self, currentValue, maxValue):
+        """Slot，更新 '腳本測試進度Bar' 值"""
+        self.PBar_Items.setMaximum(maxValue)
+        self.PBar_Items.setValue(currentValue)
+
     def show_message_box(self, title, message):
         """Slot 方法，顯示Msg Box。"""
-        QMessageBox.information(self, title, message)
+        # QMessageBox.information(self, title, message)
+        NoticeDialog(title, message, self).exec_()
 
     def set_fail_count(self, valid_count):
         """Slot 方法，Pass計數更新"""
         self.Tb_CountFail.setText(f'{valid_count}')
 
     def set_pass_count(self, valid_count):
-        """Slot 方法，Fail計數更新"""
-        self.Tb_CountPass.setText(f'{valid_count}')
-
-    def update_items_bar(self, progress_percentage):
-        """Slot 方法，更新 '腳本測試進度Bar' 值"""
-        self.PBar_Items.setValue(progress_percentage) # 設定 bar value 值
-
-    def set_max_items_bar_maximum(self, max_value):
-        """Slot 方法，設定 '腳本測試進度Bar ' Max值"""
-        self.PBar_Items.setMaximum(max_value) # 設定 maximum 值
-
-    def update_current_bar(self, progress_percentage):
-        """Slot 方法，更新 '當前測試項目進度Bar' 值"""
-        self.PBar_CurrentItem.setValue(progress_percentage) # 設定 bar value 值
-
-    def set_max_current_bar_maximum(self, max_value):
-        """Slot 方法，設定 '當前測試項目進度Bar' Max值"""
-        self.PBar_CurrentItem.setMaximum(max_value) # 設定 maximum 值
+        """
+        Slot 方法
+        
+        Args:
+            valid_count (str): Pass計數更新
+        """
+        self.Tb_CountPass.setText(str(valid_count))
 
     def update_current_line(self, current_item):
-        """Slot 方法，更新 當前測試項目的Title"""
+        """
+        Slot 方法
+
+        Args:
+            current_line (str): 目前執行item的title 
+        """
+        Log.debug(f"Current item: {current_item}")
         self.Tb_CurrentItem.setText(current_item) # 設定 bar value 值
         self.Tb_CurrentItem.setReadOnly(True) # 設定為唯讀
 
     def init_result_table(self):
         """Slot 方法，初始化 result table 狀態。"""
+        Log.debug(f"Init result table.")
+
         table = self.Table_TestResult
         for row_index in range(table.rowCount()):
             for col in range(table.columnCount()):
@@ -430,6 +357,7 @@ class MainController(MainBase, Ui_MainWindow):
 
     def update_result_table(self, row_index, value, result):
         """Slot 方法，更新 result table 測試結果"""
+        Log.debug(f"Update table index: {row_index}, result: {value}, check_result: {result}")
         table = self.Table_TestResult
         
         if row_index >= 0 and row_index<table.rowCount():
@@ -446,8 +374,11 @@ class MainController(MainBase, Ui_MainWindow):
             table.item(row_index, setting.TABLE_ENUM.VALUE.value).setText(str(value))
             table.item(row_index, setting.TABLE_ENUM.RESULT.value).setText(str("Pass" if result else "Fail"))
 
+#===================================================================================================
+# Main
+#===================================================================================================
     def main():
-        app = QSingleApplication('qtsingleapp-New AutoTesting',sys.argv)
+        app = QSingleApplication('qtsingleapp-NewAutoTesting',sys.argv)
         if app.isRunning():
             app.sendMessage("app is running")
             sys.exit(0)

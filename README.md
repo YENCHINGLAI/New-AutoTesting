@@ -17,8 +17,8 @@
 
 ## 參考並感謝以下專案
 ### Qt功能
-[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=PyQt5&repo=PyQt)](https://github.com/PyQt5/PyQt)
-[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=PyQt5&repo=PyQtClient)](https://github.com/PyQt5/PyQtClient)
-[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=tonquer&repo=picacg-qt)](https://github.com/tonquer/picacg-qt)
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=PyQt5&repo=PyQt)](https://github.com/PyQt5/PyQt)  
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=tonquer&repo=picacg-qt)](https://github.com/tonquer/picacg-qt)  
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=PyQt5&repo=PyQtClient)](https://github.com/PyQt5/PyQtClient)  
 ### Qt外觀
-[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=UN-GCPDS&repo=qt-material)](https://github.com/UN-GCPDS/qt-material)
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=UN-GCPDS&repo=qt-material)](https://github.com/UN-GCPDS/qt-material)  

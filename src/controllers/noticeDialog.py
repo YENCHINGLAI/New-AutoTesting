@@ -5,12 +5,12 @@ from PySide6.QtCore import Qt,QFile, QTextStream
 from PySide6.QtWidgets import QDialog
 from src.config import config
 from src.utils.commonUtils import UiUpdater
-from src.views.updateDialog_ui import Ui_FormUpdateDialog
+from src.views.noticeDialog_ui import Ui_FormNoticeDialog
 
-class UpdateDialog(Ui_FormUpdateDialog, QDialog):
+class NoticeDialog(QDialog, Ui_FormNoticeDialog):
 
-    def __init__(self, *args, **kwargs):
-        super(UpdateDialog, self).__init__(*args, **kwargs)
+    def __init__(self, title, message, *args, **kwargs):
+        super(NoticeDialog, self).__init__(*args, **kwargs)
 
         self.setupUi(self)
         # 关闭后自动销毁
@@ -22,9 +22,10 @@ class UpdateDialog(Ui_FormUpdateDialog, QDialog):
 
         self._loadStylesheet(config.STYLE_FILE)
 
-        UiUpdater.updateTextChanged.connect(self.onUpdateTextChanged)
-        UiUpdater.updateProgressChanged.connect(self.onUpdateProgressChanged)
-        UiUpdater.updateFinished.connect(self.labelMessage.setText)
+        self.setWindowTitle(title)
+        self.plainTextEditDetail.appendPlainText(message)
+        self.plainTextEditDetail.setReadOnly(True)
+        self.pushButton.clicked.connect(self.close)
 
     def _loadStylesheet(self, filename):
         """
@@ -40,12 +41,3 @@ class UpdateDialog(Ui_FormUpdateDialog, QDialog):
             style_file.close()
         else:
             print(f"無法打開樣式表文件: {filename}")
-
-    def onUpdateTextChanged(self, ver1, ver2, text):
-        self.labelMessage.setText(
-            self.tr('Update Version {} to Version {}'.format(ver1, ver2)))
-        self.plainTextEditDetail.setPlainText(text)
-
-    def onUpdateProgressChanged(self, currentValue, minValue, maxValue):
-        self.progressBarUpdate.setRange(minValue, maxValue)
-        self.progressBarUpdate.setValue(currentValue)

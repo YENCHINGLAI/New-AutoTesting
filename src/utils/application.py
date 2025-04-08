@@ -1,15 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
-Created on 2017年3月30日
-@author: Irony."[讽刺]
-@site: https://pyqt5.com , https://github.com/892768447
-@email: 892768447@qq.com
-@file: 单实例应用.Application
-@description: 
-'''
-
 from PySide6.QtCore import QSharedMemory, Signal, Qt
 from PySide6.QtNetwork import QLocalSocket, QLocalServer
 from PySide6.QtWidgets import QApplication
@@ -43,7 +34,9 @@ class SharedApplication(QApplication):
         return self._running
 
 class QSingleApplication(QApplication):
-    
+    """
+    阻擋重複開啟
+    """
     messageReceived = Signal(str)
     
     def __init__(self, name, *args, **kwargs):

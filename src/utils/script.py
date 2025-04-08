@@ -152,7 +152,7 @@ class ScriptManager:
             min_val, max_val = self._valid_split(valid_range)
             items.append(ScriptItems(
                 title = str(item_data.get("Title", "")),
-                retry_message = str(item_data.get("Retry Message", "")),
+                retry_message = str(item_data.get("Retry", "")),
                 valid_min = int(min_val),
                 valid_max = int(max_val),
                 unit = str(item_data.get("Unit", "")),

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1390</width>
-    <height>910</height>
+    <height>920</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -229,7 +229,7 @@
     <property name="geometry">
      <rect>
       <x>1050</x>
-      <y>350</y>
+      <y>360</y>
       <width>331</width>
       <height>151</height>
      </rect>
@@ -489,9 +489,9 @@
     <property name="geometry">
      <rect>
       <x>1050</x>
-      <y>500</y>
+      <y>520</y>
       <width>331</width>
-      <height>351</height>
+      <height>331</height>
      </rect>
     </property>
     <property name="font">
@@ -570,7 +570,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>200</y>
+       <y>180</y>
        <width>311</width>
        <height>141</height>
       </rect>
@@ -586,7 +586,7 @@
       <string notr="true"/>
      </property>
      <property name="text">
-      <string>開始</string>
+      <string>Start</string>
      </property>
      <property name="type" stdset="0">
       <string>secondary</string>

@@ -3,6 +3,7 @@ import sys
 import socket
 from PySide6.QtCore import __version__ as qt_version
 
+# general info
 UPDATE_VERSION = "1.0.0.0000"
 REAL_VERSION = "1.0.0.0000"
 TIME_VERSION = "2025-03-10"

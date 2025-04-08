@@ -60,8 +60,9 @@ class TestReport:
         # --- Test Summary ---
         self.total_tests_count = 0
         self.fail_tests_count = 0
+        self.pass_tests_count = 0
         self.final_result_str = True
-        self.test_results = []
+        self.items_result = []
 
         # 初始化資料庫管理器
         # self.db = DatabaseManager()
@@ -73,22 +74,27 @@ class TestReport:
 
         Param:    items_result (ItemResult): 單個測試項目的結果對象
         """
-        self.test_results.append(items_result)  # 將測試結果加入列表
+        self.items_result.append(items_result)  # 將測試結果加入列表
         
-        if not items_result.result:  # 如果測試結果為 False
-            self.fail_tests_count += 1  # 失敗次數加 1
-        self.total_tests_count += 1  # 總測試次數加 1
+        # if not items_result.result:  # 如果測試結果為 False
+        #     self.fail_tests_count += 1  # 失敗次數加 1
+        # self.total_tests_count += 1  # 總測試次數加 1
 
-    def End_Record_and_Create_Report(self, all_items):
+    def End_Record_and_Create_Report(self, all_items, all_pass, all_fail):
         """
         設定測試結束
         """
         self.end_time = datetime.now()  # 取得當前日期時間
         self.end_time_str = self.end_time.strftime("%H:%M:%S")  # 格式化時間
-
         self._calculate_total_time()  # 計算測試總時間
-        self.final_result_str = self.fail_tests_count == 0 and self.total_tests_count == all_items # 最終測試結果
-        Log.info(f"Test finished: {self.final_result_str}, {self.total_tests_count} tests, {self.fail_tests_count} failed, {all_items} All items")
+
+        self.total_tests_count = all_items  # 設定總測試次數
+        self.fail_tests_count= all_fail  # 設定失敗次數
+        self.pass_tests_count = all_pass  # 設定通過次數
+
+        # 最終測試結果
+        self.final_result_str = self.fail_tests_count == 0 and self.pass_tests_count == self.total_tests_count 
+        Log.info(f"Test finished: {self.final_result_str}, {self.total_tests_count} tests, {self.fail_tests_count} failed, {self.pass_tests_count} Passed")
         
         return self._generate_report()  # 生成報告
 
@@ -147,11 +153,12 @@ class TestReport:
 
                 # --- Test Summary ---
                 "total_tests": self.total_tests_count,
+                "pass_tests": self.pass_tests_count,
                 "fail_tests": self.fail_tests_count,
                 "final_result": self.final_result_str,
 
                 # --- Test Results ---
-                "test_results": self.test_results,
+                "test_results": self.items_result,
             }
     
     def _create_file(self, filename, output_data):
