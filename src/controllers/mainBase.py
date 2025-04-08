@@ -11,6 +11,7 @@ import res.res_rc
 class MainBase(QMainWindow, Ui_MainWindow):
     def _initUi(self):
         """初始化UI元件""" 
+        # 載入Ui
         self.setupUi(self)
 
         # 載入QSS
@@ -159,27 +160,25 @@ class MainBase(QMainWindow, Ui_MainWindow):
 
         # 計算位置調整值
         right_panel_x = window_width - right_panel_width - margin # 右側面板X軸位置
-        height_adjustment = window_height - margin - bot_point_y  # 物件之間距離
+        height_adjustment = window_height - margin - bot_point_y  # 設定右下Y軸位置
 
         #===================================================================================================
         # 右側物件位置處理
         #===================================================================================================   
         def adjust_x(widget, x):
-            widget.setGeometry(x, widget.y(), widget.width(), widget.height())   
+            widget.setGeometry(x, widget.y() + height_adjustment, widget.width(), widget.height())   
 
         # Adjust right-side boxes (Gbox_TX, Gbox_RX, Gbox_USER)
         adjust_x(self.Lb_Mode, right_panel_x)
         adjust_x(self.Tb_Mode, right_panel_x + self.Lb_Mode.width() + margin)
-        # adjust_x(self.Gbox_USER, right_panel_x)
+
+        adjust_x(self.Gbox_TX, right_panel_x)
+        adjust_x(self.Gbox_RX, right_panel_x)
+        adjust_x(self.GBox_PROGRESS, right_panel_x)
         
+        # User box 固定放在右上角
         self.Gbox_USER.setGeometry(right_panel_x, self.Gbox_USER.y(), 
                                       right_panel_width, right_panel_height)
-        self.Gbox_TX.setGeometry(right_panel_x, self.Gbox_TX.y() + height_adjustment, 
-                                    right_panel_width, right_panel_height)
-        self.Gbox_RX.setGeometry(right_panel_x, self.Gbox_RX.y() + height_adjustment, 
-                                    right_panel_width, right_panel_height)
-        self.GBox_PROGRESS.setGeometry(right_panel_x, self.GBox_PROGRESS.y() + height_adjustment, 
-                                          right_panel_width, self.GBox_PROGRESS.height())
         
         #===================================================================================================
         # 左側物件位置處理

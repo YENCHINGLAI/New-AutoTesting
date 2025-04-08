@@ -29,7 +29,7 @@ class Ui_FormNoticeDialog(object):
         self.plainTextEditDetail.setMinimumSize(QSize(0, 250))
         font = QFont()
         font.setFamilies([u"Arial"])
-        font.setPointSize(22)
+        font.setPointSize(28)
         font.setBold(True)
         self.plainTextEditDetail.setFont(font)
         self.plainTextEditDetail.setFrameShape(QFrame.Shape.NoFrame)

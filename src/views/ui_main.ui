@@ -33,7 +33,7 @@
       <x>1050</x>
       <y>200</y>
       <width>331</width>
-      <height>151</height>
+      <height>161</height>
      </rect>
     </property>
     <property name="font">
@@ -50,7 +50,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>50</y>
+       <y>60</y>
        <width>81</width>
        <height>31</height>
       </rect>
@@ -70,7 +70,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>20</y>
+       <y>30</y>
        <width>51</width>
        <height>31</height>
       </rect>
@@ -90,7 +90,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>110</y>
+       <y>120</y>
        <width>81</width>
        <height>31</height>
       </rect>
@@ -110,7 +110,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>80</y>
+       <y>90</y>
        <width>81</width>
        <height>31</height>
       </rect>
@@ -130,7 +130,7 @@
      <property name="geometry">
       <rect>
        <x>100</x>
-       <y>20</y>
+       <y>30</y>
        <width>221</width>
        <height>31</height>
       </rect>
@@ -143,7 +143,7 @@
       </font>
      </property>
      <property name="text">
-      <string>2025010300001</string>
+      <string/>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
@@ -153,7 +153,7 @@
      <property name="geometry">
       <rect>
        <x>100</x>
-       <y>50</y>
+       <y>60</y>
        <width>221</width>
        <height>31</height>
       </rect>
@@ -166,7 +166,7 @@
       </font>
      </property>
      <property name="text">
-      <string>00:19:12:34:56:78</string>
+      <string/>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
@@ -176,7 +176,7 @@
      <property name="geometry">
       <rect>
        <x>100</x>
-       <y>80</y>
+       <y>90</y>
        <width>221</width>
        <height>31</height>
       </rect>
@@ -189,7 +189,7 @@
       </font>
      </property>
      <property name="text">
-      <string>00:19:12:34:56:79</string>
+      <string/>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
@@ -199,7 +199,7 @@
      <property name="geometry">
       <rect>
        <x>100</x>
-       <y>110</y>
+       <y>120</y>
        <width>131</width>
        <height>31</height>
       </rect>
@@ -215,7 +215,7 @@
       <enum>Qt::LayoutDirection::LeftToRight</enum>
      </property>
      <property name="text">
-      <string>v2.10</string>
+      <string/>
      </property>
      <property name="scaledContents">
       <bool>false</bool>
@@ -231,7 +231,7 @@
       <x>1050</x>
       <y>360</y>
       <width>331</width>
-      <height>151</height>
+      <height>161</height>
      </rect>
     </property>
     <property name="font">
@@ -248,7 +248,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>50</y>
+       <y>60</y>
        <width>81</width>
        <height>31</height>
       </rect>
@@ -268,7 +268,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>20</y>
+       <y>30</y>
        <width>51</width>
        <height>31</height>
       </rect>
@@ -288,7 +288,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>110</y>
+       <y>120</y>
        <width>81</width>
        <height>31</height>
       </rect>
@@ -308,7 +308,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>80</y>
+       <y>90</y>
        <width>81</width>
        <height>31</height>
       </rect>
@@ -328,7 +328,7 @@
      <property name="geometry">
       <rect>
        <x>100</x>
-       <y>20</y>
+       <y>30</y>
        <width>221</width>
        <height>31</height>
       </rect>
@@ -341,7 +341,7 @@
       </font>
      </property>
      <property name="text">
-      <string>2025010300101</string>
+      <string/>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
@@ -351,7 +351,7 @@
      <property name="geometry">
       <rect>
        <x>100</x>
-       <y>50</y>
+       <y>60</y>
        <width>221</width>
        <height>31</height>
       </rect>
@@ -364,7 +364,7 @@
       </font>
      </property>
      <property name="text">
-      <string>00:19:12:34:56:99</string>
+      <string/>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
@@ -374,7 +374,7 @@
      <property name="geometry">
       <rect>
        <x>100</x>
-       <y>80</y>
+       <y>90</y>
        <width>221</width>
        <height>31</height>
       </rect>
@@ -387,7 +387,7 @@
       </font>
      </property>
      <property name="text">
-      <string>00:19:12:34:56:9A</string>
+      <string/>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
@@ -397,7 +397,7 @@
      <property name="geometry">
       <rect>
        <x>100</x>
-       <y>110</y>
+       <y>120</y>
        <width>131</width>
        <height>31</height>
       </rect>
@@ -413,7 +413,7 @@
       <enum>Qt::LayoutDirection::LeftToRight</enum>
      </property>
      <property name="text">
-      <string>v2.15</string>
+      <string/>
      </property>
      <property name="scaledContents">
       <bool>false</bool>
@@ -439,7 +439,7 @@
      </font>
     </property>
     <property name="text">
-     <string>CPLUS-V4H2HPIP</string>
+     <string/>
     </property>
     <property name="alignment">
      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -685,7 +685,7 @@
     <property name="geometry">
      <rect>
       <x>1050</x>
-      <y>50</y>
+      <y>10</y>
       <width>331</width>
       <height>151</height>
      </rect>
@@ -1032,7 +1032,7 @@
     <property name="geometry">
      <rect>
       <x>1050</x>
-      <y>10</y>
+      <y>170</y>
       <width>61</width>
       <height>31</height>
      </rect>
@@ -1058,7 +1058,7 @@
     <property name="geometry">
      <rect>
       <x>1130</x>
-      <y>10</y>
+      <y>170</y>
       <width>91</width>
       <height>31</height>
      </rect>
@@ -1070,7 +1070,7 @@
      </font>
     </property>
     <property name="text">
-     <string>PAIR</string>
+     <string/>
     </property>
    </widget>
    <widget class="QTableWidget" name="Table_TestItems">

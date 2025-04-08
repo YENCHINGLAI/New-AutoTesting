@@ -31,7 +31,7 @@
    <property name="font">
     <font>
      <family>Arial</family>
-     <pointsize>22</pointsize>
+     <pointsize>28</pointsize>
      <bold>true</bold>
     </font>
    </property>

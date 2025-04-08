@@ -5,12 +5,12 @@ Script:
 Product:
   Name: N2612-SA|N2622-SA
   UseMac: 2
-  UseSn: 2
+  UseSn: 1
   Version: V1.88
   TestMode: Paring
   OtherMessage: AMX
   
-Items:   
+Items:
 # 測試項目顯示名稱
 # 發生錯誤時顯示的訊息
 # 驗證值的範圍
@@ -18,10 +18,10 @@ Items:
 # 進入下一個測試項目的Delay
 # 要執行的API寫法
 # - Title: Ethernet H26X firmware check
-  # Retry Message: ''
   # Valid range: 1,1
   # Unit: N/A
   # Delay: 2
+  # Retry: ''
   # Execute: Telnet 192.168.100.191 50002 "?" "H26X_FW_VERSION:1.96" 3 5 --match_mode contains
 
 #################### CPHD-V4 Init setting ###################

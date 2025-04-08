@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor
 
-# from src.views.ui_main_ui import Ui_MainWindow
 from src.config import setting, config
 from src.utils.application import QSingleApplication
 from src.utils.script import ScriptManager
@@ -49,8 +48,8 @@ if PYSIDE_PATH not in os.environ["PATH"]:
 #===================================================================================================
 class MainController(MainBase):
     """主窗口類，處理UI界面和所有相關的操作邏輯"""
-    loaded_script = None
-    file_name = None
+    _loaded_script = None
+    _file_name = None
 
     def __init__(self):
         super(MainController, self).__init__()
@@ -199,20 +198,24 @@ class MainController(MainBase):
                 if not loaded_script:
                     self.show_message_box("錯誤", f"腳本載入錯誤: {file_name}")
                     return
-                self.file_name = file_name
-                self.loaded_script = loaded_script
+                
+                self._file_name = file_name
+                self._loaded_script = loaded_script
+                # Update Table
                 self.update_test_table(loaded_script)
                 self.update_items_table(loaded_script)
+                # Update UI
                 self.Lb_DUT.setText(loaded_script.product.model_name)
                 self.Tb_Mode.setText(loaded_script.product.mode)
+
                 Log.info(f'Load script successfully. {file_name}')
             except Exception as e:
                 Log.error(f"載入腳本時發生錯誤: {str(e)}")
                 self.show_message_box("錯誤", f"無法載入腳本: {str(e)}")
 
     def _reload_script(self):
-        if self.file_name:
-            self._read_script(self.file_name)
+        if self._file_name:
+            self._read_script(self._file_name)
             Log.info(f'Reload script successfully.')
     
     def update_test_table(self, script):
@@ -273,7 +276,7 @@ class MainController(MainBase):
 #===================================================================================================
     def Run_Script(self):
         """執行測試"""
-        if not self.loaded_script:
+        if not self._loaded_script:
             self.show_message_box("錯誤", f"無腳本可執行")
             return
 
@@ -282,13 +285,13 @@ class MainController(MainBase):
             self.Lb_DUT.text(), 
             self.Lb_T_MAC1.text(), 
             self.Lb_T_SN.text(), 
-            self.loaded_script.version, 
+            self._loaded_script.product.version, 
             self.Lb_User.text(), 
             config.HOST_NAME, 
             self.Tb_Mode.text()
             )
         
-        self._perform_manager = PerformManager(report, self.loaded_script, self._collect_selected_items())
+        self._perform_manager = PerformManager(report, self._loaded_script, self._collect_selected_items())
         self._perform_manager.start_execution(self.Lb_T_MAC1.text(), self.Lb_T_SN.text())
     
     def getStartBtnText(self):
@@ -313,7 +316,12 @@ class MainController(MainBase):
         NoticeDialog(title, message, self).exec_()
 
     def set_fail_count(self, valid_count):
-        """Slot 方法，Pass計數更新"""
+        """
+        Slot 方法
+        
+        Args:
+            valid_count (int): Fail計數更新
+        """
         self.Tb_CountFail.setText(f'{valid_count}')
 
     def set_pass_count(self, valid_count):
@@ -321,7 +329,7 @@ class MainController(MainBase):
         Slot 方法
         
         Args:
-            valid_count (str): Pass計數更新
+            valid_count (int): Pass計數更新
         """
         self.Tb_CountPass.setText(str(valid_count))
 
@@ -360,7 +368,7 @@ class MainController(MainBase):
         Log.debug(f"Update table index: {row_index}, result: {value}, check_result: {result}")
         table = self.Table_TestResult
         
-        if row_index >= 0 and row_index<table.rowCount():
+        if row_index >= 0 and row_index < table.rowCount():
             background_color = QColor(77, 255, 77) if result else QColor(255, 77, 77)       # 綠色: 通過, 紅色: 失敗
 
             for col in range(table.columnCount()):
@@ -378,7 +386,7 @@ class MainController(MainBase):
 # Main
 #===================================================================================================
     def main():
-        app = QSingleApplication('qtsingleapp-NewAutoTesting',sys.argv)
+        app = QSingleApplication('QtSingleApp-AutoTesting',sys.argv)
         if app.isRunning():
             app.sendMessage("app is running")
             sys.exit(0)

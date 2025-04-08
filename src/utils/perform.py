@@ -462,7 +462,7 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
              # Pass counts accurately reflecting completed items before stop
              final_item_count = self._total_items_to_run
              self._perform_data.report.End_Record_and_Create_Report(final_item_count, self._pass_count, self._fail_count)
-             Log.info(f"Final report generated: {self._perform_data.report.final_result_str}")
+             Log.info(f"Final report generated: {self._perform_data.report.final_result}")
         else:
              Log.warn("No report object to finalize.")
 
