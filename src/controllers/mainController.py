@@ -3,10 +3,7 @@
 #===================================================================================================
 import os
 import sys
-from pathlib import Path
 
-import PySide6
-import PySide6.QtCore
 from PySide6.QtWidgets import (
     QCheckBox, QWidget, QVBoxLayout, QTableWidget,
     QTableWidgetItem, QMessageBox, QFileDialog
@@ -21,28 +18,8 @@ from src.utils.perform import PerformManager
 from src.utils.record import TestReport
 from src.utils.log import Log
 from src.controllers.mainBase import MainBase
-from src.controllers.updateDialog import UpdateDialog
-from src.controllers.noticeDialog import NoticeDialog
-#===================================================================================================
-# Environment
-#===================================================================================================
-# 將項目根目錄添加到 Python 路徑
-ROOT_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
-sys.path.append(ROOT_DIR)
-
-# 獲取 PySide6 安裝路徑，並確保全部轉換為字符串
-PYSIDE_PATH     = str(Path(PySide6.__file__).parent)  # 轉換為字符串
-PLUGIN_PATH     = str(Path(PySide6.__file__).parent / "plugins")
-PLATFORM_PATH   = str(Path(PySide6.__file__).parent / "plugins" / "platforms")
-
-# 設定環境變數
-os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = PLATFORM_PATH
-os.environ["QT_PLUGIN_PATH"] = PLUGIN_PATH
-
-# 現在 PYSIDE_PATH 已經是字符串了
-if PYSIDE_PATH not in os.environ["PATH"]:
-    os.environ["PATH"] = PYSIDE_PATH + os.pathsep + os.environ["PATH"]
-
+from src.controllers.dialog.updateDialog import UpdateDialog
+from src.controllers.dialog.noticeDialog import NoticeDialog
 #===================================================================================================
 # Window
 #===================================================================================================
@@ -98,8 +75,9 @@ class MainController(MainBase):
 # Button function and signals
 #===================================================================================================
     def _initUpdate(self):
-        self.udialog = UpdateDialog(self)
-        self.udialog.show()
+        """檢查更新"""
+        # self.udialog = UpdateDialog(self)
+        # self.udialog.show()
 
     def closeEvent(self, event):
         reply = QMessageBox.question(
@@ -201,11 +179,13 @@ class MainController(MainBase):
                 
                 self._file_name = file_name
                 self._loaded_script = loaded_script
+
                 # Update Table
                 self.update_test_table(loaded_script)
                 self.update_items_table(loaded_script)
+                
                 # Update UI
-                self.Lb_DUT.setText(loaded_script.product.model_name)
+                self.Lb_DUT.setText(loaded_script.product.model_name)                
                 self.Tb_Mode.setText(loaded_script.product.mode)
 
                 Log.info(f'Load script successfully. {file_name}')
@@ -281,11 +261,10 @@ class MainController(MainBase):
             return
 
         report = TestReport(
+            self._loaded_script,
             self.Lb_Runcard.text(), 
-            self.Lb_DUT.text(), 
             self.Lb_T_MAC1.text(), 
-            self.Lb_T_SN.text(), 
-            self._loaded_script.product.version, 
+            self.Lb_T_SN.text(),
             self.Lb_User.text(), 
             config.HOST_NAME, 
             self.Tb_Mode.text()
@@ -386,7 +365,7 @@ class MainController(MainBase):
 # Main
 #===================================================================================================
     def main():
-        app = QSingleApplication('QtSingleApp-AutoTesting',sys.argv)
+        app = QSingleApplication('QtSingleApp-AutoTesting', sys.argv)
         if app.isRunning():
             app.sendMessage("app is running")
             sys.exit(0)

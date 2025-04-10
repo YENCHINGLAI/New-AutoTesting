@@ -138,7 +138,7 @@ def movedir(src_path):
 
 if __name__ == '__main__':
     try:
-        enter = '__main__'
+        enter = 'AutoTesting' # 主程式名稱 (不包含.py)
         # 輸出資料夾
         output_dir = os.path.join(project_root, 'package')
         os.makedirs(output_dir, exist_ok=True)

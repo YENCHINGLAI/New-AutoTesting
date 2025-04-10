@@ -6,6 +6,15 @@ from PySide6.QtCore import QObject, Signal
 #===================================================================================================
 # Execute asdasd
 #===================================================================================================
+class ItemResult:
+    def __init__(self, title, unit, min_val, max_val, value, result):
+        self.title:str = title
+        self.unit:str = unit
+        self.min:str = min_val
+        self.max:str = max_val
+        self.value:str = value
+        self.result:str = result
+        
 class _Signals(QObject):
     """
     負責處理所有 UI 更新邏輯的類，將 UI 更新與商業邏輯分離

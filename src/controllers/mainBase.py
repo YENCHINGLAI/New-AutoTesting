@@ -6,7 +6,7 @@ from src.views.ui_main_ui import Ui_MainWindow
 from src.utils.commonUtils import UiUpdater
 from src.utils.log import Log
 from src.config import config
-import res.res_rc
+from res import res_rc
 
 class MainBase(QMainWindow, Ui_MainWindow):
     def _initUi(self):
@@ -53,6 +53,8 @@ class MainBase(QMainWindow, Ui_MainWindow):
             Qt.TransformationMode.SmoothTransformation  # 使用平滑轉換
         )
         self.Lb_logo.setPixmap(scaled_pixmap)
+
+        self.Lb_logo
 
         # 設定MianWindow Icon
         self.setWindowIcon(QIcon(config.ICON_FILE))

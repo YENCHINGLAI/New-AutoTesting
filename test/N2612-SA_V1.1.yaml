@@ -88,7 +88,8 @@ Items:
   Unit: N/A
   Delay: 2
   Retry: 請確認'網路線'，是否已正確連接'待測物'
-  Execute: telnet 192.168.100.191 50002 "?" "MAC:00:19:0B:8B:6B:4C" 3 5 --match_mode contains
+#  Execute: telnet 192.168.100.191 50002 "?" "MAC:00:19:0B:8B:6B:4C" 3 5 --match_mode contains
+  Execute: telnet 192.168.100.227 50002 "?" "MAC:00:19:0B:8B:C7:2C" 3 5 --match_mode contains
   
 - Title: Ethernet H26X firmware check
   Valid range: 1,1

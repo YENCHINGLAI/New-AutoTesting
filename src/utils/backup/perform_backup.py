@@ -7,7 +7,7 @@ from queue import Queue
 
 from PySide6.QtCore import QRunnable, Signal, QThreadPool, QTimer, QObject
 
-from src.utils.script import Script, ScriptItems
+from src.utils.script import Script, TestItems
 from src.utils.log import Log
 from src.utils.record import TestReport, ItemResult
 from src.config import config
@@ -28,7 +28,7 @@ class WorkerSignals(QObject):
     """
     進入pool前須先建立物件
     """
-    finished = Signal(int, str, ScriptItems)
+    finished = Signal(int, str, TestItems)
     error = Signal(int, str)        
 
 class CommandWorker(QRunnable):
@@ -101,7 +101,7 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         self._is_running = True
         self._execute_next_item()
 
-    def _convert_execute_items(self, all_items:list[ScriptItems], selected_item_indices=None):
+    def _convert_execute_items(self, all_items:list[TestItems], selected_item_indices=None):
         """
         執行項目，加上新index用於執行
         """
@@ -173,7 +173,7 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
             .replace('$sn', sn_value or '{$sn}')
 
     # 測試Pass處理
-    def _handle_execution_result(self, index, value, item:ScriptItems):
+    def _handle_execution_result(self, index, value, item:TestItems):
         """
         處理執行完的結果
         """
@@ -223,7 +223,7 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         completed_count = self._pass_count + self._fail_count
         UiUpdater.scriptProgressChanged.emit(completed_count, self._total_items_to_run)
     
-    def _save_execution_result(self, item: ScriptItems, value, check_result):
+    def _save_execution_result(self, item: TestItems, value, check_result):
         """
         保存測試結果。
         """

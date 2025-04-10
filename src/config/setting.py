@@ -1,21 +1,18 @@
 import os
 import enum
 
-class Setting:
+class Setting:       
     @staticmethod
     def GetConfigPath():
-        """
-        Get the configuration path
-        """
         import sys
         if sys.platform == "win32":
             return "data"
         else:
             from PySide6.QtCore import QDir
             homePath = QDir.homePath()
-            projectName = ".picacg"
+            projectName = ".autoTesting"
             return os.path.join(homePath, projectName)
-
+        
     @staticmethod
     def GetLogPath():
         """

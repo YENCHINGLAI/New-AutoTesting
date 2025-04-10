@@ -8,7 +8,7 @@ from queue import Queue
 from PySide6.QtCore import QRunnable, Signal, QProcess, QTimer, QObject
 
 from src.utils.log import Log
-from src.utils.script import Script, ScriptItems
+from src.utils.script import Script, TestItems
 from src.utils.record import TestReport, ItemResult
 from src.utils.commonUtils import UiUpdater
 from src.config import config
@@ -46,7 +46,7 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
 
         # State for the currently executing item and retries
         self._current_item_original_index = -1
-        self._current_item_object: ScriptItems = None
+        self._current_item_object: TestItems = None
         self._current_retry_count = 0
         self._current_command = ""
         self._retry_limit = 2 # Default retry limit
@@ -88,6 +88,7 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
             )
         self._execution_queue = self._create_execution_queue(convert_execute_items)
         self._total_items_to_run = len(convert_execute_items)
+        self._real_total_items_to_run = len(self._perform_data.script.items) # 總項目數
         
         # 初始化 UI
         UiUpdater.itemsTableInit.emit() # Consider passing the actual items for init
@@ -100,7 +101,7 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         self._is_running = True
         self._execute_next_item()   # Start the first item
 
-    def _convert_execute_items(self, all_items:list[ScriptItems], selected_item_indices=None):
+    def _convert_execute_items(self, all_items:list[TestItems], selected_item_indices=None):
         """
         執行項目，加上新index用於執行
         """
@@ -402,7 +403,7 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         self._completed_items_count += 1
         UiUpdater.scriptProgressChanged.emit(self._completed_items_count, self._total_items_to_run)
     
-    def _save_execution_result(self, item: ScriptItems, value, check_result):
+    def _save_execution_result(self, item: TestItems, value, check_result):
         """
         保存測試結果。
         """
@@ -428,7 +429,7 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
 
         # Show final message based on success/failure and counts
         if overall_success:
-            UiUpdater.messageBoxDialog.emit("測試完成", f"所有 {self._total_items_to_run} 個項目均已成功完成。")
+            UiUpdater.messageBoxDialog.emit("測試完成", f"{self._total_items_to_run} 個項目均已完成測試。")
         else:
             UiUpdater.messageBoxDialog.emit("測試完成", result)
 
@@ -458,10 +459,12 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
                 break
 
         # Finalize report
+        final_result = self._completed_items_count == self._real_total_items_to_run and self._fail_count == 0
+
         if self._perform_data.report:
              # Pass counts accurately reflecting completed items before stop
              final_item_count = self._total_items_to_run
-             self._perform_data.report.End_Record_and_Create_Report(final_item_count, self._pass_count, self._fail_count)
+             self._perform_data.report.End_Record_and_Create_Report(final_result, final_item_count, self._pass_count, self._fail_count)
              Log.info(f"Final report generated: {self._perform_data.report.final_result}")
         else:
              Log.warn("No report object to finalize.")
@@ -479,6 +482,4 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         # UiUpdater.scriptProgressChanged.emit(self._completed_items_count, self._total_items_to_run) # Show final progress before stop
         UiUpdater.startBtnChanged.emit("Start") # Reset button state to "Start"
         
-        self._handle_execution_complete(
-                self._completed_items_count == self._total_items_to_run 
-                and self._fail_count == 0)
+        self._handle_execution_complete(final_result)

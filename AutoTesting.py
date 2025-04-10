@@ -46,21 +46,33 @@ if "NUITKA_ONEFILE_PARENT" in os.environ:
       os.unlink(splash_filename)
 
 #===================================================================================================
-# Import the necessary modules
+# Environment
 #===================================================================================================
 import sys
+from distutils.sysconfig import get_python_lib
 
-# 切換到程式所在目錄
-abs_pth = os.path.abspath(sys.argv[0])
-working_dir = os.path.dirname(abs_pth)
-os.chdir(working_dir)
+sys.path.append(os.path.dirname(os.path.abspath(sys.argv[0])))
 
-from src.controllers.mainController import MainController
-from src.utils.log import Log
+libpath = get_python_lib()
+# 將項目根目錄添加到 Python 路徑
+PYSIDE_PATH     = os.path.join(libpath, 'PySide6')
+PLUGIN_PATH     = os.path.join(libpath, 'PySide6', 'plugins')
+PLATFORM_PATH   = os.path.join(libpath, 'PySide6', 'plugins', 'platforms')
+
+# 設定環境變數
+os.environ["QT_PLUGIN_PATH"] = PLUGIN_PATH
+os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = PLATFORM_PATH
+
+# 現在 PYSIDE_PATH 已經是字符串了
+if PYSIDE_PATH not in os.environ["PATH"]:
+    os.environ["PATH"] = PYSIDE_PATH + os.pathsep + os.environ["PATH"]
 
 #===================================================================================================
 # Code
 #===================================================================================================
+from src.controllers.mainController import MainController
+from src.utils.log import Log
+
 if __name__ == "__main__":
     try:
         Log.init()

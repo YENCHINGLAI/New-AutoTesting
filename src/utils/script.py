@@ -25,7 +25,7 @@ class Product:
     other_message: str = ""     # 備註
 
 @dataclass
-class ScriptItems:
+class TestItems:
     title: str = ""                   # 項目描述
     retry_message: str = ""           # Retry前的訊息
     valid_min: Optional[int] = None   # 測試最小值
@@ -40,7 +40,7 @@ class Script:
     release_note: str = ""                  # 進版備註
     file_name: str = ""                     # 檔案名稱
     product: Product = field(default_factory=Product)
-    items: List[ScriptItems] = field(default_factory=list)
+    items: List[TestItems] = field(default_factory=list)
 
 class ScriptManager:
     def load_script(self, filename: str) -> Optional[Script]:
@@ -69,9 +69,10 @@ class ScriptManager:
             self._validate_script_structure(script_data)
             
             # 建立並填充 Script 物件
+            script_info = script_data.get("Script", {})
             script = Script(
-                version=script_data.get("Version", ""),
-                release_note=script_data.get("ReleaseNote", ""),
+                version=script_info.get("Version", ""),
+                release_note=script_info.get("ReleaseNote", ""),
                 file_name=filename
             )
 
@@ -131,7 +132,7 @@ class ScriptManager:
                 other_message = str(product_data.get("OtherMessage", ""))
             )
 
-    def _parse_items(self, items_data: List[Dict[str, Any]]) -> List[ScriptItems]:
+    def _parse_items(self, items_data: List[Dict[str, Any]]) -> List[TestItems]:
         """解析測試項目列表
 
         Args:
@@ -150,7 +151,7 @@ class ScriptManager:
             
             valid_range = str(item_data.get("Valid range", ""))
             min_val, max_val = self._valid_split(valid_range)
-            items.append(ScriptItems(
+            items.append(TestItems(
                 title = str(item_data.get("Title", "")),
                 retry_message = str(item_data.get("Retry", "")),
                 valid_min = int(min_val),
