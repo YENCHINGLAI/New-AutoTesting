@@ -18,8 +18,9 @@ from src.config import config
 #===================================================================================================
 class Perform:
     def __init__(self):
-        self.mac: str = None                       #Mac address
-        self.sn: str = None                        #Serial number
+        self.product_info: dict[str, str] = None   # 產品mac,sn資訊
+        # self.mac: str = None                       #Mac address
+        # self.sn: str = None                        #Serial number
         self.station: str = None                   #測試站
         self.script: Script = None                 #腳本
         self.report: TestReport = None             #報告
@@ -56,7 +57,7 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         self._process.errorOccurred.connect(self._on_process_error_occurred) # Renamed slot
         self._timer.timeout.connect(self._execute_next_item)
 
-    def start_execution(self, mac=None, sn=None):
+    def start_execution(self, product_info:dict[str, str]=None):
         """
         開始測試 初始化
         """
@@ -78,9 +79,10 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         self._current_retry_count = 0
 
         # 設置MAC和SN
-        self._perform_data.mac = mac or ""  # 預設值
-        self._perform_data.sn = sn or ""    # 預設值
-        
+        # self._perform_data.mac = mac or ""  # 預設值
+        # self._perform_data.sn = sn or ""    # 預設值
+        self._perform_data.product_info = product_info or {} # 產品資訊
+
         # 將Items轉換為queueue，並加上index用於執行
         convert_execute_items = self._convert_execute_items(
             self._perform_data.script.items, 
@@ -170,8 +172,9 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         command_template = item.execute
         self._current_command = self._command_mac_sn_replace(
             command_template,
-            self._perform_data.mac,
-            self._perform_data.sn
+            self._perform_data.product_info, # product_info: mac,sn
+            # self._perform_data.mac,
+            # self._perform_data.sn
         )
 
         executable_path = os.path.join(config.API_TOOLS_PATH, self._current_command.split()[0]) # Basic split, might need refinement
@@ -195,13 +198,25 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         # If startCommand fails immediately, errorOccurred will be emitted.
 
         UiUpdater.itemProgressChanged.emit(2, 5) # Step 2: Running (Process started)
-        
-    def _command_mac_sn_replace(self, command_template:str, mac_value:str, sn_value:str):
+    def _command_mac_sn_replace_old(self, command_template:str, mac_value:dict[str,str], sn_value:str):
         """
         替換執行指令中的 $mac, $sn 變數
         """
-        return command_template.replace('$mac', mac_value or '$mac')\
-            .replace('$sn', sn_value or '{$sn}')
+        return command_template.replace('$mac', mac_value or '$mac').replace('$sn', sn_value or '$sn')
+    
+    def _command_mac_sn_replace(self, command_template:str, barcode_value:dict[str,str]):
+        """
+        替換執行指令中的 $mac, $sn 變數
+        """
+        if '$mac' not in command_template and '$sn' not in command_template:
+            return command_template
+        
+        if barcode_value:
+            for key, value in barcode_value.items():
+                if value:
+                    command_template = command_template.replace(key, value)
+        
+        return command_template
 
     def _on_process_finished(self, exitCode, exitStatus):
         """
@@ -403,7 +418,7 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         self._completed_items_count += 1
         UiUpdater.scriptProgressChanged.emit(self._completed_items_count, self._total_items_to_run)
     
-    def _save_execution_result(self, item: TestItems, value, check_result):
+    def _save_execution_result(self, item: TestItems, value, check_result:bool):
         """
         保存測試結果。
         """

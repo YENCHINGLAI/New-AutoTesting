@@ -13,9 +13,14 @@ PY_VERSION = sys.version.split()[0] # 取得 Python 版本字串
 
 API_TOOLS_PATH = 'tools'
 
-HOST_NAME = socket.gethostname()
+# rcc 路徑
+STYLE_FILE = ':styles/ui_main.qss'
+ICON_FILE  = ':icons/cyp.ico'
+LOGO_FILE  = ':images/cyp.png'
+REPORT_FILE = ':report/report_template_Test.html'
 
 # report
+STATION_NAME = socket.gethostname()
 REPORT_FILE_PATH = 'report'
 REPORT_TEMPLATE_PATH = os.path.join('res', 'report')
 REPORT_TEMPLATE_FILE = 'report_template_Test.html'
@@ -23,9 +28,3 @@ REPORT_TEMPLATE_FILE = 'report_template_Test.html'
 # database
 DATABASE_NAME = "results.db"
 DATABASE_PATH = os.path.join(Setting.GetConfigPath(), DATABASE_NAME)
-
-# rcc 路徑
-STYLE_FILE = ':styles/ui_main.qss'
-ICON_FILE  = ':icons/cyp.ico'
-LOGO_FILE  = ':images/cyp.png'
-REPORT_FILE = ':report/report_template_Test.html'

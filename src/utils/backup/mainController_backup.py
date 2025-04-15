@@ -464,7 +464,7 @@ class MainController(QMainWindow, Ui_MainWindow):
         report = TestReport(self.Lb_Runcard.text(), self.Lb_DUT.text(), 
                             self.Lb_T_MAC1.text(), self.Lb_T_SN.text(), 
                             self.loaded_script.version, self.Lb_User.text(), 
-                            config.HOST_NAME, self.Tb_Mode.text()
+                            config.STATION_NAME, self.Tb_Mode.text()
                             )
         self.perform_manager = PerformManager(report, self.loaded_script, selected_item_indices)
         self.perform_manager.start_execution(self.Lb_T_MAC1.text(), self.Lb_T_SN.text())

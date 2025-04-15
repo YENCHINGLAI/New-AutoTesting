@@ -185,8 +185,8 @@ class MainController(MainBase):
                 self.update_items_table(loaded_script)
                 
                 # Update UI
-                self.Lb_DUT.setText(loaded_script.product.model_name)                
-                self.Tb_Mode.setText(loaded_script.product.mode)
+                self.Lb_DUT.setText(loaded_script.name)                
+                self.Tb_Mode.setText(loaded_script.pairing == 1 and "Pairing" or "Single")
 
                 Log.info(f'Load script successfully. {file_name}')
             except Exception as e:
@@ -260,18 +260,27 @@ class MainController(MainBase):
             self.show_message_box("錯誤", f"無腳本可執行")
             return
 
+        product_info = {
+            '$mo1': self.Lb_T_MO.text(),
+            '$mo2': self.Lb_R_MO.text(),
+            '$sn1': self.Lb_T_SN.text(),
+            '$sn2': self.Lb_R_SN.text(),
+            '$mac11': self.Lb_T_MAC1.text(),
+            '$mac12': self.Lb_T_MAC2.text(),
+            '$mac21': self.Lb_R_MAC1.text(),
+            '$mac22': self.Lb_R_MAC2.text()
+            }
+
         report = TestReport(
             self._loaded_script,
-            self.Lb_Runcard.text(), 
-            self.Lb_T_MAC1.text(), 
-            self.Lb_T_SN.text(),
-            self.Lb_User.text(), 
-            config.HOST_NAME, 
+            product_info,
+            self.Lb_User.text(),
+            config.STATION_NAME,
             self.Tb_Mode.text()
             )
         
         self._perform_manager = PerformManager(report, self._loaded_script, self._collect_selected_items())
-        self._perform_manager.start_execution(self.Lb_T_MAC1.text(), self.Lb_T_SN.text())
+        self._perform_manager.start_execution(product_info)
     
     def getStartBtnText(self):
         return self.Btn_Start.text()

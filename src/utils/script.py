@@ -21,7 +21,7 @@ class Product:
     mac_count: int = 0          # MAC數量
     serial_count: int = 0       # SN數量
     version: str = ""           # 產品版本
-    mode: str = ""              # 配對或單側
+    # mode: str = ""              # 配對或單側
     other_message: str = ""     # 備註
 
 @dataclass
@@ -36,10 +36,13 @@ class TestItems:
 
 @dataclass
 class Script:
+    name: str = ""                          # 腳本名稱
     version: str = ""                       # 版本號
+    pairing: int = 0                        # 配對或單側
     release_note: str = ""                  # 進版備註
     file_name: str = ""                     # 檔案名稱
-    product: Product = field(default_factory=Product)
+    # product: Product = field(default_factory=Product)
+    product: List[Product] = field(default_factory=list)
     items: List[TestItems] = field(default_factory=list)
 
 class ScriptManager:
@@ -71,13 +74,17 @@ class ScriptManager:
             # 建立並填充 Script 物件
             script_info = script_data.get("Script", {})
             script = Script(
+                name=script_info.get("Name", ""),
                 version=script_info.get("Version", ""),
+                pairing=script_info.get("Pairing", 0),
                 release_note=script_info.get("ReleaseNote", ""),
                 file_name=filename
             )
 
             # 填充 Product 物件
-            product_data = script_data.get("Product", {})
+            # product_data = script_data.get("Product", {})
+            # script.product = self._parse_product(product_data)
+            product_data = script_data.get("Product", [])
             script.product = self._parse_product(product_data)
 
             # 填充 Items 列表
@@ -109,12 +116,12 @@ class ScriptManager:
         """
         if not isinstance(script_data, dict):
             raise ScriptValidationError("Script data must be a YAML object (dictionary).")
-        if "Product" not in script_data or not isinstance(script_data["Product"], dict):
+        if "Product" not in script_data or not isinstance(script_data["Product"], list):
             raise ScriptValidationError("Missing 'Product' section in script data.")
         if "Items" not in script_data or not isinstance(script_data["Items"], list):
             raise ScriptValidationError("Script data must contain an 'Items' list.")
     
-    def _parse_product(self, product_data: Dict[str, Any]) -> Product:
+    def _parse_product(self, products_data: List[Dict[str, Any]]) -> List[Product]:
         """解析產品資訊
 
         Args:
@@ -123,14 +130,19 @@ class ScriptManager:
         Returns:
             Product: 解析後的產品物件
         """
-        return Product(
+        products = []
+        for product_data in products_data:
+            if not isinstance(product_data, dict):
+                raise ScriptValidationError("Each item in 'items' list must be a YAML object (dictionary).")
+            
+            products.append(Product(
                 model_name = str(product_data.get("Name", "")),
                 mac_count = int(product_data.get("UseMac", 0)),
                 serial_count = int(product_data.get("UseSn", 0)),
                 version = str(product_data.get("Version", "")),
-                mode = str(product_data.get("TestMode", "")),
                 other_message = str(product_data.get("OtherMessage", ""))
-            )
+            ))
+        return products
 
     def _parse_items(self, items_data: List[Dict[str, Any]]) -> List[TestItems]:
         """解析測試項目列表
@@ -149,7 +161,7 @@ class ScriptManager:
             if not isinstance(item_data, dict):
                 raise ScriptValidationError("Each item in 'items' list must be a YAML object (dictionary).")
             
-            valid_range = str(item_data.get("Valid range", ""))
+            valid_range = str(item_data.get("Valid", ""))
             min_val, max_val = self._valid_split(valid_range)
             items.append(TestItems(
                 title = str(item_data.get("Title", "")),

@@ -2,11 +2,10 @@
 # Import the necessary modules
 #===================================================================================================
 import os
-import datetime
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey
+from datetime import datetime
+from sqlalchemy import create_engine, Column, Integer, Text, DateTime, ForeignKey, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
-from sqlalchemy.sql import func
 
 from src.utils.log import Log
 from src.config import config
@@ -22,18 +21,27 @@ class TestSession(Base):
     __tablename__ = 'test_sessions'
     
     session_id = Column(Integer, primary_key=True, autoincrement=True)
-    runcard = Column(Text, nullable=False)
+    # runcard = Column(Text, nullable=False)
     total_tests = Column(Integer)
+    script_name = Column(Text)
     script_version = Column(Text, nullable=False)
-    product_model = Column(Text)
-    product_sn = Column(Text)
-    product_mac = Column(Text)
+
+    product_mo_tx = Column(Text)
+    product_sn_tx = Column(Text)
+    product_mac_tx_1 = Column(Text)
+    product_mac_tx_2 = Column(Text)
+    product_mo_rx = Column(Text)
+    product_sn_rx = Column(Text)
+    product_mac_rx_1 = Column(Text)
+    product_mac_rx_2 = Column(Text)
+
     tester_user = Column(Text)
     station = Column(Text)
     mode = Column(Text)
-    start_time = Column(DateTime, default=func.current_timestamp())
+    start_time = Column(DateTime, default=datetime.now)
     end_time = Column(DateTime)
-    final_result = Column(Text)
+    total_time_sec = Column(Integer)
+    final_result = Column(Boolean, default=False)
     
     # 定義與 TestItemResult 的關聯關係
     items = relationship("TestItemResult", back_populates="session")
@@ -48,8 +56,8 @@ class TestItemResult(Base):
     item_min_valid = Column(Text)
     item_max_valid = Column(Text)
     item_value = Column(Text)
-    item_result = Column(Text)
-    timestamp = Column(DateTime, default=func.current_timestamp())
+    item_result = Column(Boolean, default=False)
+    timestamp = Column(DateTime, default=datetime.now)
     
     # 定義與 TestSession 的關聯關係
     session = relationship("TestSession", back_populates="items")
@@ -101,15 +109,20 @@ class DatabaseManager:
         try:
             session = self.Session()
             new_session = TestSession(
-                runcard=script_info.get('runcard'),
                 total_tests=script_info.get('total_tests'),
+                script_name=script_info.get('script_name'),
                 script_version=script_info.get('script_version'),
-                product_model=product_info.get('model_name'),
-                product_sn=product_info.get('serial_number'),
-                product_mac=product_info.get('mac_address'),
                 tester_user=tester_info.get('user'),
                 station=tester_info.get('station'),
-                mode=mode
+                mode=mode,
+                product_mo_tx = product_info.get('mo_tx', 'N/A'),
+                product_sn_tx = product_info.get('sn_tx', 'N/A'),
+                product_mac_tx_1 = product_info.get('mac_tx_1', 'N/A'),
+                product_mac_tx_2 = product_info.get('mac_tx_2', 'N/A'),
+                product_mo_rx = product_info.get('mo_rx', 'N/A'),
+                product_sn_rx = product_info.get('sn_rx', 'N/A'),
+                product_mac_rx_1 = product_info.get('mac_rx_1', 'N/A'),
+                product_mac_rx_2 = product_info.get('mac_rx_2', 'N/A'),
             )
 
             session.add(new_session)
@@ -124,7 +137,7 @@ class DatabaseManager:
                 session.close()
             return None
 
-    def update_test_session_end(self, session_id, final_result):
+    def update_test_session_end(self, session_id, end_time, final_result:bool):
         """
         更新測試 Session 的結束時間和最終結果。
         """
@@ -132,7 +145,8 @@ class DatabaseManager:
             session = self.Session()
             test_session = session.query(TestSession).filter_by(session_id=session_id).first()
             if test_session:
-                test_session.end_time = datetime.datetime.now()
+                test_session.end_time = end_time
+                test_session.total_time_sec = (test_session.end_time - test_session.start_time).total_seconds()
                 test_session.final_result = final_result
                 session.commit()
             
@@ -144,7 +158,7 @@ class DatabaseManager:
                 session.close()
             return None
 
-    def insert_test_item_result(self, session_id, item_result: ItemResult):
+    def insert_test_item_result(self, session_id, result: ItemResult):
         """
         插入單個測試項目的結果。
         """
@@ -153,12 +167,12 @@ class DatabaseManager:
             
             new_item_result = TestItemResult(
                 session_id=session_id,
-                item_title=item_result.title,
-                item_unit=item_result.unit,
-                item_min_valid=item_result.min,
-                item_max_valid=item_result.max,
-                item_value=item_result.value,
-                item_result=item_result.result
+                item_title=result.title,
+                item_unit=result.unit,
+                item_min_valid=result.min,
+                item_max_valid=result.max,
+                item_value=result.value,
+                item_result=result.result
             )
             
             session.add(new_item_result)

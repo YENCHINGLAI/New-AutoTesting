@@ -155,9 +155,9 @@ class MainBase(QMainWindow, Ui_MainWindow):
             window_height -= self.menuBar().height()
 
         # 基本參數
-        margin = 20 # 邊距
-        right_panel_width = self.Gbox_USER.width() # 右側面板寬度
-        right_panel_height = self.Gbox_USER.height() # 右側面板高度
+        margin = 10 # 邊距
+        right_panel_width = self.Gbox_TX.width() # 右側面板寬度
+        right_panel_height = self.Gbox_TX.height() # 右側面板高度
         bot_point_y = self.Table_TestItems.y() + self.Table_TestItems.height() # 表格底部Y軸位置  
 
         # 計算位置調整值
@@ -171,16 +171,20 @@ class MainBase(QMainWindow, Ui_MainWindow):
             widget.setGeometry(x, widget.y() + height_adjustment, widget.width(), widget.height())   
 
         # Adjust right-side boxes (Gbox_TX, Gbox_RX, Gbox_USER)
-        adjust_x(self.Lb_Mode, right_panel_x)
-        adjust_x(self.Tb_Mode, right_panel_x + self.Lb_Mode.width() + margin)
+        # adjust_x(self.Lb_Mode, right_panel_x)
+        # adjust_x(self.Tb_Mode, right_panel_x + self.Lb_Mode.width() + margin)
 
         adjust_x(self.Gbox_TX, right_panel_x)
         adjust_x(self.Gbox_RX, right_panel_x)
         adjust_x(self.GBox_PROGRESS, right_panel_x)
         
+        # 放在 GBox_BUTTON 右邊
+        # self.Gbox_USER.setGeometry(self.GBox_BUTTON.x() + self.GBox_BUTTON.width() + 10, self.Gbox_USER.y(), 
+        #                               self.Gbox_USER.width(), self.Gbox_USER.height())
+
         # User box 固定放在右上角
         self.Gbox_USER.setGeometry(right_panel_x, self.Gbox_USER.y(), 
-                                      right_panel_width, right_panel_height)
+                                      right_panel_width, self.Gbox_USER.height())
         
         #===================================================================================================
         # 左側物件位置處理

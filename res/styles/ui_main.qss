@@ -85,7 +85,7 @@ QGroupBox {
     border-radius: 4px;
     margin-top: 12px;
     padding-top: 8px;
-    background-color: white;
+    background-color: #f5f5f5;/*palette(window);  使用系統調色板的窗口顏色 */
 }
 
 QGroupBox::title {
@@ -93,7 +93,7 @@ QGroupBox::title {
     margin-top: -12px;
     margin-left: 8px;
     padding: 0 5px;
-    background-color: white;
+    background-color: #f5f5f5;/*palette(window);  使用系統調色板的窗口顏色 */
     font-weight: bold;
 }
 

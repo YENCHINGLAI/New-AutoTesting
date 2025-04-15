@@ -1,27 +1,16 @@
 Script:
+  Name: N2612-SA
   Version: 1.00
+  Pairing: 0
   ReleaseNote: First version
   
 Product:
-  Name: N2612-SA|N2622-SA
+- Name: N2612-SA
   UseMac: 2
   UseSn: 1
-  Version: V1.88
-  TestMode: Paring
+  Version: v1.9.4|v1.98
   OtherMessage: AMX
-
-# 測試項目顯示名稱
-# 發生錯誤時顯示的訊息
-# 驗證值的範圍
-# 量測單位
-# 進入下一個測試項目的Delay
-# 要執行的API寫法
-# - Title: Ethernet H26X firmware check
-  # Valid: 1,1
-  # Unit: N/A
-  # Delay: 2
-  # Retry: ''
-  # Execute: Telnet 192.168.100.191 50002 "?" "H26X_FW_VERSION:1.96" 3 5 --match_mode contains
+  
 Items:
 #################### CPHD-V4 Init setting ###################
 - Title: V4 set pattern mode
@@ -88,7 +77,22 @@ Items:
   Delay: 2
   Retry: 請確認'網路線'，是否已正確連接'待測物'
 #  Execute: telnet 192.168.100.191 50002 "?" "MAC:00:19:0B:8B:6B:4C" 3 5 --match_mode contains
-  Execute: telnet 192.168.100.227 50002 "?" "MAC:00:19:0B:8B:C7:2C" 3 5 --match_mode contains
+#  Execute: telnet 192.168.100.227 50002 "?" "MAC:00:19:0B:8B:C7:2C" 3 5 --match_mode contains
+  Execute: telnet 192.168.100.227 50002 "?" "MAC:$mac11" 3 5 --match_mode contains
+  
+- Title: Ethernet sn1 check
+  Valid: 1,1
+  Unit: N/A
+  Delay: 2
+  Retry: 請確認'網路線'，是否已正確連接'待測物'
+  Execute: telnet 192.168.100.227 50002 "?" "$sn1" 3 5 --match_mode contains
+
+- Title: Ethernet sn2 check
+  Valid: 1,1
+  Unit: N/A
+  Delay: 2
+  Retry: 請確認'網路線'，是否已正確連接'待測物'
+  Execute: telnet 192.168.100.227 50002 "?" "$sn2" 3 5 --match_mode contains
   
 - Title: Ethernet H26X firmware check
   Valid: 1,1

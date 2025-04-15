@@ -13,7 +13,7 @@ class ItemResult:
         self.min:str = min_val
         self.max:str = max_val
         self.value:str = value
-        self.result:str = result
+        self.result:bool = result
         
 class _Signals(QObject):
     """
