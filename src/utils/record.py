@@ -2,11 +2,14 @@
 # Import the necessary modules
 #===================================================================================================
 import os
+import shutil
 from datetime import datetime
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, BaseLoader
+from PySide6.QtCore import QFile, QIODevice
 
-from src.utils.log import Log
+from res import res_rc
 from src.config import config
+from src.utils.log import Log
 from src.utils.commonUtils import ItemResult
 from src.utils.database import DatabaseManager
 from src.utils.script import Script
@@ -14,8 +17,8 @@ from src.utils.script import Script
 #===================================================================================================
 # Execute
 #===================================================================================================
-class TestReport:
-    def __init__(self, script: Script, product_info, tester_name, station, mode):
+class ReportGenerator:
+    def __init__(self, script: Script, product_info, tester_name, station):
         """
         初始化測試報告。
 
@@ -35,17 +38,16 @@ class TestReport:
         self.product_name = self.script.name if script else 'N/A'
         self.product_info = product_info
         self.version = self.script.version if script else 'N/A'
-        # self.runcard = runcard # Runcard info, currently not used here.
 
         # --- Tester Info ---
         self.tester_name = tester_name
         self.station = station
-        self.mode = mode
+        self.mode = self.script.test_mode.name
 
         # --- Date info ---
-        self.test_date = datetime.now()  # 取得當前日期時間
-        self.test_date_str = self.test_date.strftime("%Y-%m-%d")  # 格式化日期
-        self.start_time = datetime.now()  # 取得當前日期時間
+        self.test_date = datetime.now()                             # 取得當前日期時間
+        self.test_date_str = self.test_date.strftime("%Y-%m-%d")    # 格式化日期
+        self.start_time = datetime.now()                            # 取得當前日期時間
         self.start_time_str = self.start_time.strftime("%H:%M:%S")  # 格式化時間
         self.end_time = None
         self.end_time_str = None
@@ -86,26 +88,15 @@ class TestReport:
 
             # --- 準備 Product Info ---
             product_in_for_db = {}
+
             # 獲取 TX (DUT ID 1) 的資訊
             product_in_for_db.update(self._get_db_product_fields(dut_id=1, db_prefix='tx'))
+
             # 獲取 RX (DUT ID 2) 的資訊
             if self.script.pairing == 1:  # 如果是配對模式，則加入第二個產品的資訊
                 product_in_for_db.update(self._get_db_product_fields(dut_id=2, db_prefix='rx'))
             else:
                 product_in_for_db.update({"mo_rx": "N/A", "sn_rx": "N/A", "mac_rx_1": "N/A", "mac_rx_2": "N/A"})
-
-            # product_in_for_db = {
-            #     "script_name": self.product_name,
-            #     "mo_tx": self.product_info.get('$mo1', 'N/A'),
-            #     "sn_tx": self.product_info.get('$sn1', 'N/A'),  # 使用第一個產品的序號
-            #     "mac_tx_1": self.product_info.get('$mac11', 'N/A'),  # 使用第一個產品的 MAC 位址
-            #     "mac_tx_2": self.product_info.get('$mac12', 'N/A'),  # 使用第一個產品的 MAC 位址
-                
-            #     "mo_rx": self.product_info.get('$mo2', 'N/A'),
-            #     "sn_rx": self.product_info.get('$sn2', 'N/A'),  # 使用第一個產品的序號
-            #     "mac_rx_1": self.product_info.get('$mac21', 'N/A'),  # 使用第一個產品的 MAC 位址
-            #     "mac_rx_2": self.product_info.get('$mac22', 'N/A'),  # 使用第一個產品的 MAC 位址
-            # }
 
             # --- 準備 Tester Info ---
             tester_in_for_db = {
@@ -119,7 +110,7 @@ class TestReport:
                 script_info = script_in_for_db,
                 product_info = product_in_for_db,
                 tester_info = tester_in_for_db,
-                mode = getattr(self, 'mode', 'N/A')
+                mode = self.mode  # getattr(self, 'mode', 'N/A')
                 )
             
             if self.db_session_id is not None:
@@ -183,9 +174,9 @@ class TestReport:
         self.items_result.append(item_result)  # 將測試結果加入列表
         Log.debug(f"Added item result '{item_result.title}' to internal list.")
 
-        self.db_add_test_result(item_result)  # 將測試結果寫入資料庫
+        self._db_add_test_result(item_result)  # 將測試結果寫入資料庫
 
-    def db_add_test_result(self, item_result : ItemResult):
+    def _db_add_test_result(self, item_result : ItemResult):
         """
         新增測試結果到資料庫
 
@@ -193,16 +184,6 @@ class TestReport:
         """
         if self.db_manager and self.db_session_id is not None:
             try:
-                # db_items_result_str = "Pass" if item_result.result else "Fail"
-                # 將測試結果轉換為資料庫格式
-                # db_item = ItemResult(
-                #     title=item_result.title,
-                #     unit=item_result.unit,
-                #     min_val=item_result.min,
-                #     max_val=item_result.max,
-                #     value=item_result.value,
-                #     result=db_items_result_str
-                # )
                 # 將測試結果寫入資料庫
                 Log.debug(f"Inserting item result '{item_result.title}' into database (Session ID: {self.db_session_id}).")
                 self.db_manager.insert_test_item_result(self.db_session_id, item_result)
@@ -237,12 +218,12 @@ class TestReport:
         Log.info(f"Test finished: {self.final_result}, {self.total_tests_count} tests, {self.fail_tests_count} failed, {self.pass_tests_count} Passed")
         
         # --- Update Database Session ---
-        self.db_end_record()  # 結束資料庫 Session
+        self._db_end_record()  # 結束資料庫 Session
         
         # --- Generate HTML Report ---
-        return self._generate_report()  # 生成報告
+        return self._generator_report()  # 生成報告
     
-    def db_end_record(self):
+    def _db_end_record(self):
         """
         結束測試記錄，並更新資料庫 Session。
         """
@@ -272,7 +253,7 @@ class TestReport:
              self.total_time_str = "N/A"
              Log.warn("Could not calculate total time: start or end time missing.")
 
-    def _generate_report(self, filename=None):
+    def _generator_report(self, filename=None):
         """
         生成 HTML 報告 (使用更漂亮的模板)
 
@@ -288,10 +269,22 @@ class TestReport:
             Log.error(f"生成報告時發生錯誤: {e}")
             return False
         
-    def _load_template(self):
+    def _load_template_old(self):
         Log.debug(f"Loading report template from: {config.REPORT_TEMPLATE_PATH}, file: {config.REPORT_TEMPLATE_FILE}")
         env = Environment(loader=FileSystemLoader(config.REPORT_TEMPLATE_PATH))         # 設定 Jinja2 環境
         return env.get_template(config.REPORT_TEMPLATE_FILE)                            # 載入新的模板
+    
+    def _load_template(self):
+        file = QFile(config.REPORT_FILE)
+        if not file.open(QIODevice.OpenModeFlag.ReadOnly | QIODevice.OpenModeFlag.Text):
+            Log.error(f"無法打開報告模板文件: {config.REPORT_FILE}")
+            return None
+        
+        template_content = str(file.readAll().data().decode('utf-8'))
+        file.close()
+
+        env = Environment(loader=BaseLoader())  # 使用 BaseLoader 來處理字符串內容
+        return env.from_string(template_content)  # 從字符串創建模板對象
     
     def _create_data(self):
         duts_for_template = []
@@ -330,37 +323,13 @@ class TestReport:
         # --- 過濾掉沒有有效資訊的 DUT ---
          # 判斷標準：SN 不是 'N/A'，或者 MACs 列表中至少有一個不是 'N/A'
         def is_useful(dut):
+            name_is_useful = dut.get('name') != 'N/A'
             sn_is_useful = dut.get('sn') != 'N/A'
             macs_list = dut.get('macs', [])
             macs_are_useful = any(mac and mac != 'N/A' for mac in macs_list)
-            return sn_is_useful or macs_are_useful
+            return sn_is_useful or macs_are_useful or name_is_useful
         
         filtered_duts = [dut for dut in duts_for_template if is_useful(dut)]
-
-        # duts_for_template= [{
-        #     'name': self.script.product[0].model_name, # 使用第一個產品的名稱
-        #         'version': self.script.product[0].version, # 使用第一個產品的版本             
-        #         'sn':  self.product_info.get('$sn1', 'N/A'), # 使用產品資訊中的序號
-        #         'macs':  [self.product_info.get('$mac11', 'N/A'), self.product_info.get('$mac12', 'N/A')]\
-        #               if self.product_info else [], # 使用產品資訊中的 MAC 位址
-        # }]
-
-        # if self.script.pairing == 1: # 如果是配對模式，則加入第二個產品的資訊
-        #     duts_for_template.append(
-        #     {
-        #         'name': self.script.product[1].model_name, # 使用第一個產品的名稱
-        #             'version': self.script.product[1].version, # 使用第一個產品的版本             
-        #             'sn':  self.product_info.get('$sn2', 'N/A'), # 使用產品資訊中的序號
-        #             'macs':  [self.product_info.get('$mac21', 'N/A'), self.product_info.get('$mac22', 'N/A')]\
-        #                 if self.product_info else [], # 使用產品資訊中的 MAC 位址
-        #     })
-
-        #  # Filter out DUTs with no useful info (optional) ， 無 sn 或 mac 則移除
-        #  # duts_for_template = [dut for dut in duts_for_template if dut.get('sn') or dut.get('macs')]
-        # duts_for_template = [
-        #     dut for dut in duts_for_template 
-        #     if dut.get('sn') or any(mac for mac in dut.get('macs',[]))
-        #     ]
 
         report_data = {
             "report_title": "Test Report",
@@ -387,16 +356,22 @@ class TestReport:
         return report_data
     
     def _create_file(self, filename, output_data):
+        """
+        將報告寫入 HTML 檔案
+        """
         try:
             os.makedirs(config.REPORT_FILE_PATH, exist_ok=True)
             created_files = []
 
-            if filename is None:
-                num_duts = min(self.script.pairing + 1, len(self.script.product))
+            num_duts_pairing = self.script.pairing + 1
+            num_products = len(self.script.product) if hasattr(self.script, 'product') else 0
+            num_duts = min(num_duts_pairing, num_products)
+            test_mode = getattr(self.script, 'test_mode', None)
 
+            if filename is None:
                 for i in range(num_duts):
                     # 確保產品資訊存在，並且有足夠的資料
-                    if i >= len(self.script.product):
+                    if i >= num_products:
                         Log.warn(f"Product info for DUT {i+1} is not available.")
                         continue
 
@@ -407,33 +382,36 @@ class TestReport:
                     safe_mo = "".join(c if c.isalnum() else "_" for c in mo_val) if mo_val else "NoMO"
                     filename = f"{station_str}_{safe_mo}_{timestamp_str}"      
                     file_path = os.path.join(config.REPORT_FILE_PATH, f"{filename}.html")
-                    # 寫入檔案
-                    with open(file_path, "w", encoding="utf-8") as f:
-                        f.write(output_data)
-                    created_files.append(file_path)
-####################
-                # for key, value in self.product_info.items():
-                #     if '$mo' in key and value:
-                #         station_str = self.station if self.station else "NoStation"
-                #         timestamp_str = self.start_time.strftime("%Y%m%d_%H%M%S")
 
-                #         safe_mo = "".join(c if c.isalnum() else "_" for c in value) if value else "NoMO"
-                #         filename = f"{station_str}_{safe_mo}_{timestamp_str}"      
-                #         file_path = os.path.join(config.REPORT_FILE_PATH, f"{filename}.html")
-                #         # 寫入檔案
-                #         with open(file_path, "w", encoding="utf-8") as f:
-                #             f.write(output_data)
+                    # 寫入判斷
+                    should_save = False
+                    if self.script.pairing == 0:
+                        if i == 0:  # pairing = 0 時只儲存 mo1
+                            should_save = True
+                    elif test_mode == config.TEST_MODE.RX:
+                        if i == 1:  # TEST_MODE.RX 時儲存 mo2 (index 1)
+                            should_save = True
+                    elif test_mode == config.TEST_MODE.TX:
+                        if i == 0:  # TEST_MODE.TX 時儲存 mo1 (index 0)
+                            should_save = True
+                    elif test_mode == config.TEST_MODE.BOTH:
+                        should_save = True  # TEST_MODE.PAIR 時儲存所有 DUT
+
+                    if should_save:
+                        # 寫入檔案
+                        with open(file_path, "w", encoding="utf-8") as f:
+                            f.write(output_data)
+                        created_files.append(file_path)
             else:
                 file_path = os.path.join(config.REPORT_FILE_PATH, f"{filename}.html")
+
                 # 寫入檔案
                 with open(file_path, "w", encoding="utf-8") as f:
                     f.write(output_data)     
             
-            # Log.info(f"HTML 報告已生成: {file_path}")           
-            # return True
-             # 記錄所有創建的檔案
             for path in created_files:
                 Log.info(f"HTML 報告已生成: {path}")
+                self.upload_report(path)  # 上傳報告
                 
             return bool(created_files)  # 如果創建了至少一個檔案，返回True
         except IOError as io_err:
@@ -442,3 +420,26 @@ class TestReport:
         except Exception as e:
             Log.error(f"生成報告時發生錯誤: '{file_path}': {e}", exc_info=True)
             return False # Indicate failure
+        
+    def upload_report(self, source_file):
+        """
+        上傳報告到指定的路徑 (目前是本地端的路徑)
+        """
+        try:
+            # 轉換為網絡路徑格式
+            network_path = config.REPORT_UPLOAD_PATH
+            os.makedirs(network_path, exist_ok=True)
+
+            # 獲取文件名
+            file_name = os.path.basename(source_file)
+
+            # 完整的目標路徑
+            destination_path = os.path.join(network_path, file_name)
+            if os.path.exists(network_path):
+                Log.info(f"上傳報告到: {network_path}")
+                # 這裡可以加入上傳的邏輯，例如使用 FTP 或其他協議
+                shutil.move(source_file, destination_path)
+        except Exception as e:
+            Log.error(f"上傳報告時發生錯誤: {e}", exc_info=True)
+            return False # Indicate failure
+        return True # Indicate success

@@ -34,7 +34,7 @@ class DatabaseManager:
         """
         初始化資料庫，如果資料庫檔案不存在則建立，並建立必要的表格。
         """
-        db_dir = Setting.GetConfigPath()
+        db_dir = Setting.GetDataPath()
         if not os.path.isdir(db_dir):
             os.makedirs(db_dir)
 

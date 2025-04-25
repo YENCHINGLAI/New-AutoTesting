@@ -143,7 +143,7 @@
       </font>
      </property>
      <property name="text">
-      <string>15600000016</string>
+      <string/>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
@@ -166,7 +166,7 @@
       </font>
      </property>
      <property name="text">
-      <string>00:19:0B:8B:C7:2C</string>
+      <string/>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
@@ -189,7 +189,7 @@
       </font>
      </property>
      <property name="text">
-      <string>00:19:0B:8B:C7:2D</string>
+      <string/>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
@@ -261,7 +261,7 @@
       </font>
      </property>
      <property name="text">
-      <string>M1234567890</string>
+      <string/>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
@@ -485,7 +485,7 @@
       </font>
      </property>
      <property name="text">
-      <string>M9234567890</string>
+      <string/>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>

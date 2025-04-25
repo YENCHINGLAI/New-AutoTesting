@@ -23,6 +23,10 @@ class MainBase(QMainWindow, Ui_MainWindow):
         # 初始化表格設置
         self._initTables()
 
+        # 設定視窗標題     
+        self.setWindowTitle("Auto Testing System")
+        # self.setWindowTitle("自動測試系統")
+
         # 設置最小視窗大小
         self.setMinimumSize(1390, 920)
         

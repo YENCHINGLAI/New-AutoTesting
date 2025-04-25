@@ -15,10 +15,6 @@ class UpdateDialog(Ui_FormUpdateDialog, QDialog):
         self.setupUi(self)
         # 关闭后自动销毁
         self.setAttribute(Qt.WA_DeleteOnClose, True)
-        # 背景透明
-        # self.setAttribute(Qt.WA_TranslucentBackground, True)
-        # 无边框
-        # self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
 
         self._loadStylesheet(config.STYLE_FILE)
 

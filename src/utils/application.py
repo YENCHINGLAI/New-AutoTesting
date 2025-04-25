@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# 防止程式重複開啟
 
 from PySide6.QtCore import QSharedMemory, Signal, Qt
 from PySide6.QtNetwork import QLocalSocket, QLocalServer
 from PySide6.QtWidgets import QApplication
-
 
 __version__ = "0.0.1"
 

@@ -1,3 +1,0 @@
-serial.exe $mac,115200 "$boot?" "$boot? ready" 0 1
-serial COM2,115200 "$model?" "$model? Pattern Gen." 0 1
-serial COM2,115200 "$timingx?" "$timingx? 720p61" 0 1

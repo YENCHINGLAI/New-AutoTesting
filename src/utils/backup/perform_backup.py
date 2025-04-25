@@ -9,7 +9,7 @@ from PySide6.QtCore import QRunnable, Signal, QThreadPool, QTimer, QObject
 
 from src.utils.script import Script, TestItems
 from src.utils.log import Log
-from src.utils.record import TestReport, ItemResult
+from src.utils.record import ReportGenerator, ItemResult
 from src.config import config
 from src.utils.commonUtils import UiUpdater
 
@@ -22,7 +22,7 @@ class Perform:
         self.sn: str = None                        #Serial number
         self.station: str = None                   #測試站
         self.script: Script = None                 #腳本
-        self.report: TestReport = None             #報告
+        self.report: ReportGenerator = None             #報告
 
 class WorkerSignals(QObject):
     """
@@ -58,7 +58,7 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
     """
     執行 Items
     """
-    def __init__(self, report: TestReport, script: Script, selected_item_indices=None):
+    def __init__(self, report: ReportGenerator, script: Script, selected_item_indices=None):
         super().__init__()                      # 初始化 QObject (如果繼承自 QObject)
         self._perform_data = Perform()           # Perform 物件    
         self._perform_data.report = report       # 報告

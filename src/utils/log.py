@@ -2,11 +2,11 @@
 # Import the necessary modules
 #===================================================================================================
 import os
-import sys
 import time
 import logging
 
 from src.config.setting import Setting
+from src.config import config
 
 #===================================================================================================
 # Execute
@@ -33,7 +33,8 @@ class Log:
         cls.logger.addHandler(cls.ch)
 
         # FileHandler (輸出到檔案)
-        log_path = Setting.GetLogPath()                     # 從 Setting 取得日誌路徑
+        # log_path = Setting.GetLogPath()                     # 從 Setting 取得日誌路徑
+        log_path = config.LOG_PATH
         if not os.path.isdir(log_path):
             os.makedirs(log_path)
         day = time.strftime('%Y%m%d', time.localtime(time.time()))

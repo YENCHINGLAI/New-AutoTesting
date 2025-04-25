@@ -18,7 +18,7 @@ from src.config import setting, config
 from src.views.ui_main_ui import Ui_MainWindow
 from src.utils.script import ScriptManager
 from src.utils.perform import PerformManager
-from src.utils.record import TestReport
+from src.utils.record import ReportGenerator
 from src.utils.log import Log
 from src.utils.commonUtils import UiUpdater
 from src.controllers.mainBase import MainBase
@@ -409,10 +409,10 @@ class MainController(QMainWindow, Ui_MainWindow):
 
             for index, item in enumerate(script.items):
                 # 設置項目名稱 
-                set_table.setItem(index, setting.TABLE_ENUM.TITLE.value, QTableWidgetItem(item.title))
-                set_table.setItem(index, setting.TABLE_ENUM.UNIT.value, QTableWidgetItem(item.unit))
-                set_table.setItem(index, setting.TABLE_ENUM.MIN_VALID.value, QTableWidgetItem(str(item.valid_min)))
-                set_table.setItem(index, setting.TABLE_ENUM.MAX_VALID.value, QTableWidgetItem(str(item.valid_max)))        
+                set_table.setItem(index, setting.TABLE_COL.TITLE.value, QTableWidgetItem(item.title))
+                set_table.setItem(index, setting.TABLE_COL.UNIT.value, QTableWidgetItem(item.unit))
+                set_table.setItem(index, setting.TABLE_COL.MIN_VALID.value, QTableWidgetItem(str(item.valid_min)))
+                set_table.setItem(index, setting.TABLE_COL.MAX_VALID.value, QTableWidgetItem(str(item.valid_max)))        
             # 不可編輯    
             set_table.setEditTriggers(QTableWidget.NoEditTriggers)
             
@@ -461,7 +461,7 @@ class MainController(QMainWindow, Ui_MainWindow):
             self.show_message_box("錯誤", f"無腳本可執行")
             return
 
-        report = TestReport(self.Lb_Runcard.text(), self.Lb_DUT.text(), 
+        report = ReportGenerator(self.Lb_Runcard.text(), self.Lb_DUT.text(), 
                             self.Lb_T_MAC1.text(), self.Lb_T_SN.text(), 
                             self.loaded_script.version, self.Lb_User.text(), 
                             config.STATION_NAME, self.Tb_Mode.text()
@@ -512,7 +512,7 @@ class MainController(QMainWindow, Ui_MainWindow):
                     item = QTableWidgetItem()
                     table.setItem(row_index, col, item)
                 item.setBackground(QBrush(QColor(255, 255, 255)))
-                if col == setting.TABLE_ENUM.VALUE.value or col == setting.TABLE_ENUM.RESULT.value:
+                if col == setting.TABLE_COL.VALUE.value or col == setting.TABLE_COL.RESULT.value:
                     item.setText('')
 
         self.Tb_CountFail.setText('0')
@@ -534,5 +534,5 @@ class MainController(QMainWindow, Ui_MainWindow):
                 item.setBackground(QBrush(background_color))
 
             # 寫入測試值
-            table.item(row_index, setting.TABLE_ENUM.VALUE.value).setText(str(value))
-            table.item(row_index, setting.TABLE_ENUM.RESULT.value).setText(str("Pass" if result else "Fail"))
+            table.item(row_index, setting.TABLE_COL.VALUE.value).setText(str(value))
+            table.item(row_index, setting.TABLE_COL.RESULT.value).setText(str("Pass" if result else "Fail"))

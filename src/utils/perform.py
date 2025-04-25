@@ -2,14 +2,13 @@
 # Import the necessary modules
 #===================================================================================================
 import os
-import subprocess
 from queue import Queue
 
-from PySide6.QtCore import QRunnable, Signal, QProcess, QTimer, QObject
+from PySide6.QtCore import QProcess, QTimer, QObject
 
 from src.utils.log import Log
 from src.utils.script import Script, TestItems
-from src.utils.record import TestReport, ItemResult
+from src.utils.record import ReportGenerator, ItemResult
 from src.utils.commonUtils import UiUpdater
 from src.config import config
 
@@ -19,17 +18,15 @@ from src.config import config
 class Perform:
     def __init__(self):
         self.product_info: dict[str, str] = None   # 產品mac,sn資訊
-        # self.mac: str = None                       #Mac address
-        # self.sn: str = None                        #Serial number
         self.station: str = None                   #測試站
         self.script: Script = None                 #腳本
-        self.report: TestReport = None             #報告
+        self.report: ReportGenerator = None             #報告
 
 class PerformManager(QObject):                   # 繼承 QObject，如果需要使用 signal/slot
     """
     執行 Items
     """
-    def __init__(self, report: TestReport, script: Script, selected_item_indices=None):
+    def __init__(self, report: ReportGenerator, script: Script, selected_item_indices=None):
         super().__init__()                      # 初始化 QObject (如果繼承自 QObject)
         self._perform_data = Perform()           # Perform 物件    
         self._perform_data.report = report       # 報告
@@ -79,8 +76,6 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         self._current_retry_count = 0
 
         # 設置MAC和SN
-        # self._perform_data.mac = mac or ""  # 預設值
-        # self._perform_data.sn = sn or ""    # 預設值
         self._perform_data.product_info = product_info or {} # 產品資訊
 
         # 將Items轉換為queueue，並加上index用於執行
@@ -150,11 +145,27 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
             self._execution_queue.task_done()   # Mark task as done in the queue
             self._current_retry_count = 0       # Reset retry count for the new item
 
+            # 檢查是否需要跳過此項目
+            if self._should_skip_item(self._current_item_object.title):
+                self._execute_next_item()
+                return
+        
             Log.info(f"Executing item index {self._current_item_original_index}: '{self._current_item_object.title}'")
             self._prepare_and_run_process()
         except Exception as e:
             Log.error(f'Error executing next item: {e}', exc_info=True)
 
+    def _should_skip_item(self, item_title: str) -> bool:
+        """
+        根據當前的測試模式判斷是否應該跳過該測試項目。
+        """
+        if hasattr(self._perform_data.script, 'test_mode') and self._perform_data.script.test_mode in config.SKIP_MODE:
+            skip_keyword = config.SKIP_MODE.get(self._perform_data.script.test_mode)
+            if skip_keyword and skip_keyword in item_title:
+                Log.info(f"根據測試模式 '{self._perform_data.script.test_mode.name}'，跳過測試項目 '{item_title}'")
+                return True
+        return False
+    
     def _prepare_and_run_process(self):
         """
         準備並執行項目
@@ -163,7 +174,6 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
             return
         
         item = self._current_item_object
-        original_index = self._current_item_original_index
 
         UiUpdater.itemProgressChanged.emit(0, 5) # Step 0: Prepare
         UiUpdater.currentItemChanged.emit(item.title + (f" (Retry {self._current_retry_count})" if self._current_retry_count > 0 else ""))
@@ -173,8 +183,6 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         self._current_command = self._command_mac_sn_replace(
             command_template,
             self._perform_data.product_info, # product_info: mac,sn
-            # self._perform_data.mac,
-            # self._perform_data.sn
         )
 
         executable_path = os.path.join(config.API_TOOLS_PATH, self._current_command.split()[0]) # Basic split, might need refinement
@@ -198,11 +206,6 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         # If startCommand fails immediately, errorOccurred will be emitted.
 
         UiUpdater.itemProgressChanged.emit(2, 5) # Step 2: Running (Process started)
-    def _command_mac_sn_replace_old(self, command_template:str, mac_value:dict[str,str], sn_value:str):
-        """
-        替換執行指令中的 $mac, $sn 變數
-        """
-        return command_template.replace('$mac', mac_value or '$mac').replace('$sn', sn_value or '$sn')
     
     def _command_mac_sn_replace(self, command_template:str, barcode_value:dict[str,str]):
         """
@@ -473,7 +476,11 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
             except Queue.Empty:
                 break
 
-        # Finalize report
+        # Finalize report (目前判斷結果為 完成項目==腳本所有項目數量 and 失敗次數==0)
+        # Pass : _completed_items_count == _real_total_items_to_run and _fail_count == 0
+        # Incomplete : _fail_count == 0 and _completed_items_count < _real_total_items_to_run
+        # Fail : _fail_count > 0 or _completed_items_count < _real_total_items_to_run
+        # Note: This logic may need to be adjusted based on your requirements
         final_result = self._completed_items_count == self._real_total_items_to_run and self._fail_count == 0
 
         if self._perform_data.report:
@@ -489,12 +496,8 @@ class PerformManager(QObject):                   # 繼承 QObject，如果需要
         self._current_item_object = None
         self._current_retry_count = 0
 
-        Log.info('Execution stopped.')
         # Optionally, update UI to indicate stopped status
+        Log.info('Execution stopped.')
         UiUpdater.currentItemChanged.emit("已停止測試")
-        # Reset progress bars maybe?
-        # UiUpdater.itemProgressChanged.emit(0, 5)
-        # UiUpdater.scriptProgressChanged.emit(self._completed_items_count, self._total_items_to_run) # Show final progress before stop
-        UiUpdater.startBtnChanged.emit("Start") # Reset button state to "Start"
-        
+        UiUpdater.startBtnChanged.emit("Start") # Reset button state to "Start" 
         self._handle_execution_complete(final_result)

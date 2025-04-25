@@ -15,11 +15,13 @@ from src.config import setting, config
 from src.utils.application import QSingleApplication
 from src.utils.script import ScriptManager
 from src.utils.perform import PerformManager
-from src.utils.record import TestReport
+from src.utils.record import ReportGenerator
 from src.utils.log import Log
 from src.controllers.mainBase import MainBase
 from src.controllers.dialog.updateDialog import UpdateDialog
 from src.controllers.dialog.noticeDialog import NoticeDialog
+from src.utils.barcode import collect_product_barcodes
+
 #===================================================================================================
 # Window
 #===================================================================================================
@@ -39,6 +41,7 @@ class MainController(MainBase):
         # 初始化
         self._initUi()
         self._initSignals()
+        setting.Setting.init(self)
 
     def _create_centered_checkbox(self):     
         """創建居中的checkbox widget"""    
@@ -111,7 +114,7 @@ class MainController(MainBase):
 
     def start_test(self):
         """開始測試前的確認"""
-        if self.getStartBtnText()=='Stop':
+        if self.getStartBtnText() == 'Stop':
             reply = QMessageBox.question(
                 self,
                 "確認停止測試",
@@ -123,19 +126,62 @@ class MainController(MainBase):
                 self.setStartBtnText('Start')
                 self._perform_manager.stop_execution()
         else:
-            reply = QMessageBox.question(
-                self,
-                "確認開始測試",
-                "是否開始執行測試？",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No
-            )
+            testMode = config.TEST_MODE.BOTH
+            if self._loaded_script.pairing == 1:
+                testMode = self.select_mode()
+                if testMode and hasattr(self._loaded_script, 'test_mode'):
+                    self._loaded_script.test_mode = testMode
 
-            if reply == QMessageBox.StandardButton.Yes:
-                # 執行測試邏輯
-                print("開始測試...")
+            result = collect_product_barcodes(self, self._loaded_script)
+            Log.info(f"Product info collected: {result}")
+            if result:
+                Log.info(f"開始測試...")
                 self.setStartBtnText('Stop')
-                self.Run_Script()
+                self.update_product_info(result) # 更新產品資訊
+                self.run_script(result)
+
+    def select_mode(self):
+        """
+        顯示選擇測試模式的對話框，並返回所選擇的模式
+        """
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("選擇測試模式")
+        msg_box.setText("請選擇要測試的模式：")
+        
+        # 添加三個自定義按鈕
+        tx_button = msg_box.addButton("TX", QMessageBox.ActionRole)
+        rx_button = msg_box.addButton("RX", QMessageBox.ActionRole)
+        pair_button = msg_box.addButton("Pair", QMessageBox.ActionRole)
+        # cancel_button = msg_box.addButton("取消", QMessageBox.RejectRole)
+        
+        msg_box.exec()
+        
+        # 判斷哪個按鈕被點擊了
+        clicked_button = msg_box.clickedButton()
+        
+        if clicked_button == tx_button:
+            return config.TEST_MODE.TX
+        elif clicked_button == rx_button:
+            return config.TEST_MODE.RX
+        elif clicked_button == pair_button:
+            return config.TEST_MODE.BOTH
+        else:
+            return None
+        
+    def update_product_info(self, product_info: dict):
+        """更新產品資訊"""
+        self.Lb_T_MO.setText(product_info.get('$mo1', 'N/A'))
+        self.Lb_T_SN.setText(product_info.get('$sn1', 'N/A'))
+        self.Lb_T_MAC1.setText(product_info.get('$mac11', 'N/A'))
+        self.Lb_T_MAC2.setText(product_info.get('$mac12', 'N/A'))
+        self.Lb_T_Version.setText(product_info.get('$version', 'N/A'))
+        
+        self.Lb_R_MO.setText(product_info.get('$mo2', 'N/A'))
+        self.Lb_R_SN.setText(product_info.get('$sn2', 'N/A'))      
+        self.Lb_R_MAC1.setText(product_info.get('$mac21', 'N/A'))
+        self.Lb_R_MAC2.setText(product_info.get('$mac22', 'N/A'))
+        self.Lb_R_Version.setText(product_info.get('$version', 'N/A'))
+        self.Tb_Mode.setText(self._loaded_script.test_mode.name)
 
     def select_all_items(self):
         """全選所有測試項目"""
@@ -186,7 +232,6 @@ class MainController(MainBase):
                 
                 # Update UI
                 self.Lb_DUT.setText(loaded_script.name)                
-                self.Tb_Mode.setText(loaded_script.pairing == 1 and "Pairing" or "Single")
 
                 Log.info(f'Load script successfully. {file_name}')
             except Exception as e:
@@ -207,10 +252,11 @@ class MainController(MainBase):
             
             # 設置項目名稱 
             for index, item in enumerate(script.items):
-                set_table.setItem(index, setting.TABLE_ENUM.TITLE.value, QTableWidgetItem(item.title))
-                set_table.setItem(index, setting.TABLE_ENUM.UNIT.value,  QTableWidgetItem(item.unit))
-                set_table.setItem(index, setting.TABLE_ENUM.MIN_VALID.value, QTableWidgetItem(str(item.valid_min)))
-                set_table.setItem(index, setting.TABLE_ENUM.MAX_VALID.value, QTableWidgetItem(str(item.valid_max)))
+                set_table.setItem(index, config.TABLE_COL.TITLE.value, QTableWidgetItem(item.title))
+                set_table.setItem(index, config.TABLE_COL.UNIT.value,  QTableWidgetItem(item.unit))
+                set_table.setItem(index, config.TABLE_COL.MIN_VALID.value, QTableWidgetItem(str(item.valid_min)))
+                set_table.setItem(index, config.TABLE_COL.MAX_VALID.value, QTableWidgetItem(str(item.valid_max)))
+
             # 不可編輯    
             set_table.setEditTriggers(QTableWidget.NoEditTriggers)
             
@@ -250,33 +296,21 @@ class MainController(MainBase):
             Log.error(f"更新Items表格發生錯誤: {str(e)}")
             self.show_message_box("錯誤", f"無法更新Items表格: {str(e)}")
             return False
-        
+
 #===================================================================================================
 # Perform
 #===================================================================================================
-    def Run_Script(self):
+    def run_script(self, product_info):
         """執行測試"""
         if not self._loaded_script:
             self.show_message_box("錯誤", f"無腳本可執行")
             return
 
-        product_info = {
-            '$mo1': self.Lb_T_MO.text(),
-            '$mo2': self.Lb_R_MO.text(),
-            '$sn1': self.Lb_T_SN.text(),
-            '$sn2': self.Lb_R_SN.text(),
-            '$mac11': self.Lb_T_MAC1.text(),
-            '$mac12': self.Lb_T_MAC2.text(),
-            '$mac21': self.Lb_R_MAC1.text(),
-            '$mac22': self.Lb_R_MAC2.text()
-            }
-
-        report = TestReport(
+        report = ReportGenerator(
             self._loaded_script,
             product_info,
             self.Lb_User.text(),
-            config.STATION_NAME,
-            self.Tb_Mode.text()
+            config.STATION_NAME
             )
         
         self._perform_manager = PerformManager(report, self._loaded_script, self._collect_selected_items())
@@ -344,7 +378,7 @@ class MainController(MainBase):
                     item = QTableWidgetItem()
                     table.setItem(row_index, col, item)
                 item.setBackground(QBrush(QColor(255, 255, 255)))
-                if col == setting.TABLE_ENUM.VALUE.value or col == setting.TABLE_ENUM.RESULT.value:
+                if col == config.TABLE_COL.VALUE.value or col == config.TABLE_COL.RESULT.value:
                     item.setText('')
 
         self.Tb_CountFail.setText('0')
@@ -367,8 +401,8 @@ class MainController(MainBase):
                 item.setBackground(QBrush(background_color))
 
             # 寫入測試值
-            table.item(row_index, setting.TABLE_ENUM.VALUE.value).setText(str(value))
-            table.item(row_index, setting.TABLE_ENUM.RESULT.value).setText(str("Pass" if result else "Fail"))
+            table.item(row_index, config.TABLE_COL.VALUE.value).setText(str(value))
+            table.item(row_index, config.TABLE_COL.RESULT.value).setText(str("Pass" if result else "Fail"))
 
 #===================================================================================================
 # Main

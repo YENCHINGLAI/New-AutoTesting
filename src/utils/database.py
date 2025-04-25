@@ -21,7 +21,6 @@ class TestSession(Base):
     __tablename__ = 'test_sessions'
     
     session_id = Column(Integer, primary_key=True, autoincrement=True)
-    # runcard = Column(Text, nullable=False)
     total_tests = Column(Integer)
     script_name = Column(Text)
     script_version = Column(Text, nullable=False)
@@ -87,13 +86,15 @@ class DatabaseManager:
         """
         初始化資料庫，如果資料庫檔案不存在則建立，並建立必要的表格。
         """
-        db_dir = Setting.GetConfigPath()
+        # db_dir = Setting.GetDataPath()
+        db_dir = config.DATABASE_PATH
         if not os.path.isdir(db_dir):
             os.makedirs(db_dir)
 
-        db_exists = os.path.exists(config.DATABASE_PATH)
+        db_path = os.path.join(db_dir, config.DATABASE_NAME)
+        db_exists = os.path.exists(db_path)
         
-        self.engine = create_engine(f'sqlite:///{config.DATABASE_PATH}')
+        self.engine = create_engine(f'sqlite:///{db_path}', echo=False)
         self.Session = sessionmaker(bind=self.engine)
 
         if not db_exists:

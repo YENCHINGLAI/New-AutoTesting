@@ -2,11 +2,12 @@
 # Import the necessary modules
 #===================================================================================================
 import os
-import yaml # 導入 yaml 模組
+import yaml
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 
 from src.utils.log import Log
+from src.config import config
 
 #===================================================================================================
 # Execute
@@ -19,9 +20,8 @@ class ScriptValidationError(Exception):
 class Product:
     model_name: str = ""        # 機種名
     mac_count: int = 0          # MAC數量
-    serial_count: int = 0       # SN數量
+    sn_count: int = 0           # SN數量
     version: str = ""           # 產品版本
-    # mode: str = ""              # 配對或單側
     other_message: str = ""     # 備註
 
 @dataclass
@@ -38,14 +38,17 @@ class TestItems:
 class Script:
     name: str = ""                          # 腳本名稱
     version: str = ""                       # 版本號
-    pairing: int = 0                        # 配對或單側
     release_note: str = ""                  # 進版備註
     file_name: str = ""                     # 檔案名稱
-    # product: Product = field(default_factory=Product)
+    pairing: int = 0                        # 配對或單側
+    test_mode: config.TEST_MODE = config.TEST_MODE.BOTH   # 測試模式
     product: List[Product] = field(default_factory=list)
     items: List[TestItems] = field(default_factory=list)
 
 class ScriptManager:
+    def __init__(self):
+        self.script = None
+        
     def load_script(self, filename: str) -> Optional[Script]:
         """載入並解析腳本檔案
 
@@ -55,12 +58,13 @@ class ScriptManager:
         Returns:
             成功: Script
             失敗: None
-        """
-        if not os.path.exists(filename):
-            Log.error("Script file not found: %s", filename)
-            return None
-        
-        try:           
+        """      
+        try:          
+            if not os.path.exists(filename):
+                Log.error("Script file not found: %s", filename)
+                # raise FileNotFoundError(f"腳本檔案不存在: {filename}")
+                return None
+     
             with open(filename, 'r', encoding='utf-8') as file:
                 script_data: Dict[str, Any] = yaml.safe_load(file)
 
@@ -125,7 +129,7 @@ class ScriptManager:
         """解析產品資訊
 
         Args:
-            product_data: 產品相關的 YAML 資料
+            products_data: 產品相關的 YAML 資料
 
         Returns:
             Product: 解析後的產品物件
@@ -138,7 +142,7 @@ class ScriptManager:
             products.append(Product(
                 model_name = str(product_data.get("Name", "")),
                 mac_count = int(product_data.get("UseMac", 0)),
-                serial_count = int(product_data.get("UseSn", 0)),
+                sn_count = int(product_data.get("UseSn", 0)),
                 version = str(product_data.get("Version", "")),
                 other_message = str(product_data.get("OtherMessage", ""))
             ))
@@ -161,27 +165,61 @@ class ScriptManager:
             if not isinstance(item_data, dict):
                 raise ScriptValidationError("Each item in 'items' list must be a YAML object (dictionary).")
             
+            # 處理 delay 值轉換可能的錯誤
+            try:
+                delay = float(item_data.get("Delay", 0))
+            except (ValueError, TypeError):
+                delay = 0.0
+                Log.error(f"Invalid delay value: {item_data.get('Delay')}. Using default value 0.0")
+
             valid_range = str(item_data.get("Valid", ""))
             min_val, max_val = self._valid_split(valid_range)
+            # 檢查 min_val 和 max_val 是否為 None，若是則設置默認值
+            valid_min = int(min_val) if min_val is not None else 1
+            valid_max = int(max_val) if max_val is not None else 1
+
             items.append(TestItems(
                 title = str(item_data.get("Title", "")),
                 retry_message = str(item_data.get("Retry", "")),
-                valid_min = int(min_val),
-                valid_max = int(max_val),
+                valid_min = valid_min,
+                valid_max = valid_max,
                 unit = str(item_data.get("Unit", "")),
-                delay = float(item_data.get("Delay", 0)),
+                delay = delay,
                 execute = str(item_data.get("Execute", ""))
             ))
 
         return items
 
-    def _valid_split(self, valid_range):
+    # def _valid_split(self, valid_range):
+    #     try:
+    #         min_val, max_val = map(int, valid_range.split(','))
+    #     except Exception:
+    #         return None, None
+    #     return min_val, max_val
+
+    def _valid_split(self, valid_range: str) -> tuple:
+        """解析有效範圍字串
+
+        Args:
+            valid_range: 範圍字符串，格式為"min,max"
+
+        Returns:
+            tuple: 解析後的(min, max)值，解析失敗則返回(None, None)
+        """
+        if not valid_range or not isinstance(valid_range, str):
+            return None, None
+            
         try:
-            min_val, max_val = map(int, valid_range.split(','))
+            parts = valid_range.split(',')
+            if len(parts) != 2:
+                return None, None
+                
+            min_val = int(parts[0].strip())
+            max_val = int(parts[1].strip())
+            return min_val, max_val
         except Exception:
             return None, None
-        return min_val, max_val
-
+        
     def add_item(self, item):
         self.script.items.append(item)
     

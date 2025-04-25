@@ -4,27 +4,28 @@
 
 import os
 import subprocess
-import sys
 import shutil
+from src.config import config
 
-# 主程式
-APP_NAME="AutoTesting"
-APP_VERSION="0.0.2"
-DESCRIPTION="New Auto Testing Application"
-COPYRIGHT="Copyright 2025"
-COMPANY_NAME="Cypress Technology Co., Ltd"
+# 主程式資訊
+APP_NAME = config.APP_NAME # "AutoTestingSystem" # 打包後的應用程式名稱
+APP_VERSION = config.REAL_VERSION # "0.1.0"
+DESCRIPTION = "New Auto Testing System"
+COPYRIGHT = "Copyright 2025"
+COMPANY_NAME = "Cypress Technology Co., Ltd"
 
 # 專案根目錄
 project_root = os.path.dirname(os.path.abspath(__file__))
 print(project_root)
 
+#===================================================================================================
+# 打包參數
+#===================================================================================================
 def build(main, method):
     # 打包參數配置
     nuitka_cmd = [
         'nuitka',
-#===================================================================================================
-# 打包參數
-#===================================================================================================
+
         # 建立獨立環境
         '--standalone',     
 
@@ -40,13 +41,12 @@ def build(main, method):
 
         # App icon
         f'--windows-icon-from-ico="{project_root}/res/icons/cyp.ico"',
-        #'--windows-icon-from-ico=res/icons/cyp.ico',
 
-        # 外觀樣式，會搬到打包後的專案內 (20250226圖形相關改用qrc)
+        # 外觀樣式，會搬到打包後的專案內
         # '--include-data-dir=res=res',
-        '--include-data-dir=res/report=res/report',
+        # '--include-data-dir=res/report=res/report',
 
-        # API副程式
+        # API副程式 (將其他會用到的exe，複製到打包專案內)
         '--include-data-files=tools/*.exe=tools/',          # tools資料夾下所有exe檔
         # '--include-data-files=tools/*.dll=tools/',          # tools資料夾下所有dll檔
 
@@ -87,19 +87,7 @@ def execute_cmd(cmd):
     try:
         # 執行打包
         print("開始打包...")
-#===================================================================================================
-        # # '不'即時顯示編譯輸出
-        # result = subprocess.run(nuitka_cmd, cwd=project_root, capture_output=True, text=True)
-        
-        # # 檢查打包結果
-        # if result.returncode == 0:
-        #     print("打包成功！")
-        #     print(f"可執行文件位於 {OUTPUT_DIR} 目錄")
-        # else:
-        #     print("打包失敗：")
-        #     print(result.stderr)
 
-#===================================================================================================
         # 執行上面寫好的nuitka command
         process = subprocess.Popen(
             cmd,
@@ -132,24 +120,37 @@ def execute_cmd(cmd):
     return False
 
 def movedir(src_path):
-    dst_path = os.path.join(output_dir, 'publish')
+    dst_path = os.path.join(project_root, '.Update')
     os.makedirs(dst_path, exist_ok=True)
     shutil.copy(src_path, os.path.join(dst_path, os.path.basename(src_path)))
 
+def zipdir(src_path):
+    dst_path = os.path.join(project_root, '.Update', enter)
+    shutil.make_archive(dst_path, 'zip', src_path)
+
+    # 刪除原始資料夾
+    # shutil.rmtree(src_path)
+
+    print(f"打包完成，檔案位置：{dst_path}")
+
 if __name__ == '__main__':
     try:
-        enter = 'AutoTesting' # 主程式名稱 (不包含.py)
-        # 輸出資料夾
+        # 要編譯的.PY檔案 (不需要寫.py)
+        enter = 'AutoTesting'
+
+        # # 輸出資料夾
         output_dir = os.path.join(project_root, 'package')
-        os.makedirs(output_dir, exist_ok=True)
+        os.makedirs(output_dir, exist_ok = True)
 
-        # 產生打包指令
+        # # 產生打包指令
         exe_path = build(enter, input("[Debug(0) / Release(1)]："))
-        # print(exe_cmd)
-        # print(exe_path)
+        exe_path = r"C:\OneDrive-YC\OneDrive - CYPRESS TECHNOLOGY CO.,LTD\Python\New_AutoTesting\package\release\AutoTesting.dist"
 
-        # 執行打包 subprocess
-        # result = execute_cmd(exe_cmd)
+        # 改名
+        #os.rename(exe_path, enter)
+
+        #壓縮
+        zipdir(exe_path)
 
         # 搬到publish
         # movedir(exe_path)

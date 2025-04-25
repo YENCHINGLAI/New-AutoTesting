@@ -27,7 +27,7 @@
             margin-bottom: 10px;
         }
 
-        p.summary {
+        p.summary { /* Keep if used elsewhere, otherwise optional */
             text-align: center;
             color: #777;
             margin-bottom: 20px;
@@ -45,6 +45,7 @@
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #eee;
+            vertical-align: top; /* Align content to top for multi-line MACs */
         }
 
         th {
@@ -57,87 +58,44 @@
             background-color: #f9f9f9;
         }
 
-        .status-true {
-            color: #27ae60;
-            /* Green */
-            font-weight: bold;
-        }
-
-        .status-false {
-            color: #e74c3c;
-            /* Red */
-            font-weight: bold;
-        }
-
-        .status-error {
-            color: #f39c12;
-            /* Orange */
-            font-weight: bold;
-        }
-
-        .status-unknown {
-            color: #999;
-            /* Grey */
-            font-weight: bold;
-        }
+        .status-true { color: #27ae60; font-weight: bold; }
+        .status-false { color: #e74c3c; font-weight: bold; }
+        .status-error { color: #f39c12; font-weight: bold; } /* If you use ERROR status */
+        .status-unknown { color: #999; font-weight: bold; } /* If you use UNKNOWN status */
 
         .report-summary-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            /* 自動填滿，每欄最小 250px，最多 1fr */
+            /* Adjust columns based on content, maybe fixed columns work better now? */
+            /* grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); */
+            grid-template-columns: repeat(3, 1fr); /* Example: 3 columns */
             gap: 10px 20px;
-            /* 列間距 10px，欄間距 20px */
             margin-top: 20px;
             margin-bottom: 30px;
+            border-bottom: 2px solid #eee; /* Add separator after summary */
+            padding-bottom: 20px; /* Space before separator */
         }
 
         .grid-item {
-            /* New */
-            /* 可以為每個 grid item 設定樣式，如果需要的話 */
             display: flex;
-            /* 將 grid-item 變成 flex container */
             flex-direction: row;
-            /* 設定 flex 方向為水平 (row) */
             align-items: baseline;
-            /* 讓 label 和 value 的文字基線對齊 (可選，根據您的需求調整) */
         }
 
         .grid-item .label {
             font-weight: bold;
-            display: block;
-            /* 讓 label 佔據整行 */
-            margin-bottom: 5px;
             color: #555;
-            /* 標題顏色 */
-            /* New */
-            margin-right: 10px;
-            /* label 和 value 之間增加間距 */
-            width: auto;
-            /* 讓 label 寬度自適應內容 */
-            text-align: left;
-            /* label 文字靠左對齊 */
-            display: inline-block;
-            /* 讓 label 變成 inline-block 元素，才能和 value 水平排列 */
+            margin-right: 8px; /* Slightly reduced margin */
+            white-space: nowrap; /* Prevent label wrapping */
+            flex-shrink: 0; /* Don't shrink label */
         }
 
         .grid-item .value {
-            /* New */
-            /* value 的樣式可以根據需要調整 */
-            display: inline-block;
-            /* 讓 value 也變成 inline-block 元素，和 label 水平排列 */
+            /* Value can wrap if needed */
+            word-break: break-all; /* Break long MACs/SNs if necessary */
         }
-		
-		.pass-count {
-			color: #27ae60;
-            /* 綠色，標示成功次數 */
-            font-weight: bold;
-        }
-		
-        .fail-count {
-            color: #e74c3c;
-            /* 紅色，標示失敗次數 */
-            font-weight: bold;
-        }
+
+		.pass-count { color: #27ae60; font-weight: bold; }
+        .fail-count { color: #e74c3c; font-weight: bold; }
 
         .final-result {
             font-size: 1.2em;
@@ -147,83 +105,136 @@
         p.product-name {
             text-align: center;
             color: #555;
-            /* Product Name 文字顏色 */
             font-size: 1.2em;
-            /* Product Name 字體大小 */
             margin-bottom: 20px;
-            /* Product Name 的下邊距 */
         }
+
+        /* Style for DUT section divider (Optional) */
+        .dut-divider {
+            grid-column: 1 / -1; /* Span all columns */
+            border-top: 1px dashed #ccc;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+        .dut-divider:first-child {
+             border-top: none; /* No border before the first DUT */
+             margin-top: 0;
+        }
+
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h1>{{ report_title }}</h1>
-        <p class="product-name">Product Name: {{ product_name }}</p>
-        <!-- === Report 資訊區塊 === -->
+        <h1>{{ report_title | default('Test Report') }}</h1>
+        <p class="product-name">Script Name: {{ product_name | default('N/A') }}</p>
+
+        <!-- === Report Summary Grid === -->
         <div class="report-summary-grid">
-            <!-- 產品資訊 -->
-            <div class="grid-item">
-                <span class="label">Mac Address:</span>
-                <span class="value">{{ mac_address }}</span>
-            </div>
-            <div class="grid-item">
-                <span class="label">Serial Number:</span>
-                <span class="value">{{ serial_number }}</span>
-            </div>
-            <div class="grid-item">
-                <span class="label">Version:</span>
-                <span class="value">{{ version }}</span>
-            </div>
-            <!-- 測試站資訊 -->
+            <!-- == DUT Information Section == -->
+            {% for dut in duts %}
+                {# Optional divider between multiple DUTs #}
+                {% if not loop.first %}
+                <div class="dut-divider"></div>
+                {% endif %}
+
+                {# Determine a label for this DUT #}
+                {% set dut_label = dut.name if dut.name else "DUT " + loop.index|string %}
+
+                <div class="grid-item">
+                    <span class="label">SN ({{ dut_label }}):</span>
+                    <span class="value">{{ dut.sn | default('N/A') }}</span>
+                </div>
+                <div class="grid-item">
+                    <span class="label">Version ({{ dut_label }}):</span>
+                    <span class="value">{{ dut.version | default('N/A') }}</span>
+                </div>
+                <div class="grid-item">
+                    <span class="label">MAC ({{ dut_label }}):</span>
+                    <span class="value">
+                        {% if dut.macs %}
+                            {{ dut.macs | join('<br>') | safe }} {# Display MACs one per line #}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </span>
+                </div>
+            {% else %}
+                {# Fallback if duts list is empty #}
+                <div class="grid-item">
+                    <span class="label">Device Info:</span>
+                    <span class="value">No DUT info provided.</span>
+                </div>
+            {% endfor %}
+            <!-- == End DUT Information == -->
+
+            {# Optional divider before station info #}
+            <div class="dut-divider"></div>
+				
+            <!-- == Test Station & Time Information == -->
             <div class="grid-item">
                 <span class="label">User:</span>
-                <span class="value">{{ tester_name }}</span>
+                <span class="value">{{ tester_name | default('N/A') }}</span>
             </div>
             <div class="grid-item">
                 <span class="label">Station:</span>
-                <span class="value">{{ station }}</span>
+                <span class="value">{{ station | default('N/A') }}</span>
             </div>
             <div class="grid-item">
                 <span class="label">Mode:</span>
-                <span class="value">{{ mode }}</span>
+                <span class="value">{{ mode | default('N/A') }}</span>
             </div>
-            <!-- 時間 -->
             <div class="grid-item">
                 <span class="label">Date:</span>
-                <span class="value">{{ test_date }}</span>
+                <span class="value">{{ test_date | default('N/A') }}</span>
             </div>
             <div class="grid-item">
                 <span class="label">Start Time:</span>
-                <span class="value">{{ start_time }}</span>
+                <span class="value">{{ start_time | default('N/A') }}</span>
             </div>
             <div class="grid-item">
                 <span class="label">End Time:</span>
-                <span class="value">{{ end_time }}</span>
+                <span class="value">{{ end_time | default('N/A') }}</span>
             </div>
             <div class="grid-item">
-                <span class="label">Total time:</span>
-                <span class="value">{{ total_time }}</span>
+                <span class="label">Total Time:</span>
+                <span class="value">{{ total_time | default('N/A') }}</span>
             </div>
-            <!-- 測試結果 -->
+             <!-- == End Test Station & Time Information == -->
+
+             {# Optional divider before results #}
+             {# <div class="dut-divider"></div> #}
+
+             <!-- == Test Result Summary == -->
 			<div class="grid-item">
                 <span class="label">Pass:</span>
-                <span class="value pass-count">{{ pass_tests }}</span>
+                <span class="value pass-count">{{ pass_tests | default('0') }}</span>
             </div>
             <div class="grid-item">
                 <span class="label">Fails:</span>
-                <span class="value fail-count">{{ fail_tests }}</span>
+                <span class="value fail-count">{{ fail_tests | default('0') }}</span>
             </div>
 			<div class="grid-item">
                 <span class="label">Total tests:</span>
-                <span class="value">{{ total_tests }}</span>
+                <span class="value">{{ total_tests | default('0') }}</span>
             </div>
             <div class="grid-item">
+                {# Display Final Result prominently, maybe spanning columns? #}
+                 {# Example: Make it span if possible, depends on grid complexity #}
                 <span class="label">Final Result:</span>
-                <span class="value final-result status-{{ final_result|lower() }}">{{"Pass" if final_result else "Fail"}}</span>
+                {% if final_result is defined and final_result is not none %}
+                    <span class="value final-result status-{{ 'true' if final_result else 'false' }}">
+                        {{ "Pass" if final_result else "Fail" }}
+                    </span>
+                {% else %}
+                     <span class="value final-result status-unknown">Unknown</span>
+                {% endif %}
             </div>
-        </div>
-        <!-- === 測試項目區塊 === -->
+             <!-- == End Test Result Summary == -->
+
+        </div> <!-- End of report-summary-grid -->
+
+        <!-- === Test Items Table === -->
         <table>
             <thead>
                 <tr>
@@ -238,13 +249,23 @@
             <tbody>
                 {% for item in test_results %}
                 <tr>
-                    <td>{{ item.title }}</td>
-                    <td>{{ item.unit }}</td>
-                    <td>{{ item.min }}</td>
-                    <td>{{ item.max }}</td>
-                    <td>{{ item.value }}</td>
-                    <td class="status-{{ item.result|lower() }}">{{"Pass" if item.result else "Fail"}}</td>
+                    <td>{{ item.title | default('') }}</td>
+                    <td>{{ item.unit | default('') }}</td>
+                    <td>{{ item.min | default('') }}</td>
+                    <td>{{ item.max | default('') }}</td>
+                    <td>{{ item.value | default('') }}</td>
+                    {% if item.result is defined and item.result is not none %}
+                        <td class="status-{{ 'true' if item.result else 'false' }}">
+                            {{ "Pass" if item.result else "Fail" }}
+                        </td>
+                    {% else %}
+                         <td class="status-unknown">N/A</td> {# Handle missing result #}
+                    {% endif %}
                 </tr>
+                {% else %}
+                 <tr>
+                     <td colspan="6" style="text-align: center; color: #777;">No test results recorded.</td>
+                 </tr>
                 {% endfor %}
             </tbody>
         </table>

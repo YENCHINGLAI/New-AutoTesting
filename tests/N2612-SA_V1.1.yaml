@@ -1,0 +1,98 @@
+Script:
+  Version: 1.00
+  ReleaseNote: First version
+  
+Product:
+  Name: N2612-SA|N2622-SA
+  UseMac: 2
+  UseSn: 1
+  Version: V1.88
+  TestMode: Paring
+  OtherMessage: AMX
+
+# 測試項目顯示名稱
+# 發生錯誤時顯示的訊息
+# 驗證值的範圍
+# 量測單位
+# 進入下一個測試項目的Delay
+# 要執行的API寫法
+# - Title: Ethernet H26X firmware check
+  # Valid: 1,1
+  # Unit: N/A
+  # Delay: 2
+  # Retry: ''
+  # Execute: Telnet 192.168.100.191 50002 "?" "H26X_FW_VERSION:1.96" 3 5 --match_mode contains
+Items:
+#################### CPHD-V4 Init setting ###################
+- Title: V4 set pattern mode
+  Valid: 1,1
+  Unit: N/A
+  Delay: 1
+  Retry: 請確認 COM13 是否存在, 或是被其他應用程式占用
+  Execute: serial_api COM13,115200 "$task_mode pattern" "$task_mode pattern" 2 2
+  
+- Title: V4 set timing to 4096x2160p60
+  Valid: 1,1
+  Unit: N/A
+  Delay: 1
+  Retry: 請確認 COM13 是否存在, 或是被其他應用程式占用
+  Execute: serial_api COM13,115200 "$timing 90" "$timing 90" 2 2
+  
+- Title: V4 set hdcp on
+  Valid: 1,1
+  Unit: N/A
+  Delay: 1
+  Retry: 請確認 COM13 是否存在, 或是被其他應用程式占用
+  Execute: serial_api COM13,115200 "$hdcp_out_sw on" "$hdcp_out_sw on" 2 2
+  
+- Title: V4 set hdcp v2.2
+  Valid: 1,1
+  Unit: N/A
+  Delay: 5
+  Retry: 請確認 COM13 是否存在, 或是被其他應用程式占用
+  Execute: serial_api COM13,115200 "$hdcp_out_ver v2.2" "$hdcp_out_ver v2.2" 2 2
+  
+#################### Audio test ###################
+- Title: Balance out Left RMS Amplitude
+  Valid: 1530,1870
+  Unit: mV
+  Delay: 2
+  Retry: 請確認 Analog 輸出線材是否正確連接
+  Execute: balance_api 0 0
+  
+- Title: Balance out Left Frequency
+  Valid: 950,1050
+  Unit: Hz
+  Delay: 2
+  Retry: 請確認'Analog'輸出線材，是否正確連接
+  Execute: balance_api 2 0
+
+- Title: Balance out Right RMS DIFF
+  Valid: 1530,1870
+  Unit: mV
+  Delay: 2
+  Retry: 請確認 Analog 輸出線材，是否正確連接
+  Execute: balance_api 0 1
+  
+- Title: Balance out Right Frequency
+  Valid: 950,1050
+  Unit: Hz
+  Delay: 2
+  Retry: 請確認 Analog 輸出線材，是否正確連接
+  Execute: balance_api 2 1
+  
+#################### DUT info check ###################
+- Title: Ethernet mac address check
+  Valid: 1,1
+  Unit: N/A
+  Delay: 2
+  Retry: 請確認'網路線'，是否已正確連接'待測物'
+#  Execute: telnet 192.168.100.191 50002 "?" "MAC:00:19:0B:8B:6B:4C" 3 5 --match_mode contains
+  Execute: telnet 192.168.100.227 50002 "?" "MAC:00:19:0B:8B:C7:2C" 3 5 --match_mode contains
+  
+- Title: Ethernet H26X firmware check
+  Valid: 1,1
+  Unit: N/A
+  Delay: 2
+  Retry: 請確認'網路線'，是否已正確連接'待測物'
+  Execute: telnet 192.168.100.227 50002 "?" "H26X_FW_VERSION:1.96" 3 5 --match_mode contains
